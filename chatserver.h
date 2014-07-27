@@ -52,16 +52,19 @@ class ChatServer : public QObject
 {
     Q_OBJECT
 public:
-    explicit ChatServer(quint16 port, QObject *parent = Q_NULLPTR);
-    virtual ~ChatServer();
+    ChatServer(quint16 port, QObject *parent = Q_NULLPTR);
+    ~ChatServer();
 
-private Q_SLOTS:
+signals:
+    void playerMoved(const QVariant &pos);
+
+private slots:
     void onNewConnection();
-    void processMessage(QString message);
+    void processMessage(const QString &message);
     void socketDisconnected();
 
 private:
-    QWebSocketServer *m_pWebSocketServer;
+    QWebSocketServer *m_wsServer;
     QList<QWebSocket *> m_clients;
 };
 

@@ -1,7 +1,7 @@
-QT       += quick websockets
+QT       += gui quick websockets
 
 TARGET = chatserver
-CONFIG   += console
+CONFIG   += c++11
 CONFIG   -= app_bundle
 
 TEMPLATE = app

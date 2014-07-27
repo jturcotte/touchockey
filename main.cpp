@@ -39,7 +39,10 @@
 **
 ****************************************************************************/
 #include <QGuiApplication>
+#include <QQuickItem>
 #include <QQuickView>
+#include <QPoint>
+#include <QDebug>
 #include "chatserver.h"
 
 int main(int argc, char *argv[])
@@ -49,6 +52,7 @@ int main(int argc, char *argv[])
 
     QQuickView view(QUrl::fromEncoded("main.qml"));
     view.setResizeMode(QQuickView::SizeRootObjectToView);
+    QObject::connect(&server, SIGNAL(playerMoved(const QVariant&)), view.rootObject(), SLOT(playerMoved(const QVariant&)));
 
     view.show();
     return a.exec();

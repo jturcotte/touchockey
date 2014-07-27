@@ -42,60 +42,59 @@
 #include "QtWebSockets/QWebSocketServer"
 #include "QtWebSockets/QWebSocket"
 #include <QtCore/QDebug>
+#include <QPoint>
+#include <QJsonDocument>
+#include <QJsonObject>
 
 QT_USE_NAMESPACE
 
-//! [constructor]
 ChatServer::ChatServer(quint16 port, QObject *parent) :
     QObject(parent),
-    m_pWebSocketServer(Q_NULLPTR),
+    m_wsServer(nullptr),
     m_clients()
 {
-    m_pWebSocketServer = new QWebSocketServer(QStringLiteral("Chat Server"),
+    m_wsServer = new QWebSocketServer(QStringLiteral("Chat Server"),
                                               QWebSocketServer::NonSecureMode,
                                               this);
-    if (m_pWebSocketServer->listen(QHostAddress::Any, port))
+    if (m_wsServer->listen(QHostAddress::Any, port))
     {
         qDebug() << "Chat Server listening on port" << port;
-        connect(m_pWebSocketServer, &QWebSocketServer::newConnection,
+        connect(m_wsServer, &QWebSocketServer::newConnection,
                 this, &ChatServer::onNewConnection);
     }
 }
 
 ChatServer::~ChatServer()
 {
-    m_pWebSocketServer->close();
+    m_wsServer->close();
     qDeleteAll(m_clients.begin(), m_clients.end());
 }
-//! [constructor]
 
-//! [onNewConnection]
 void ChatServer::onNewConnection()
 {
-    QWebSocket *pSocket = m_pWebSocketServer->nextPendingConnection();
+    QWebSocket *pSocket = m_wsServer->nextPendingConnection();
 
     connect(pSocket, &QWebSocket::textMessageReceived, this, &ChatServer::processMessage);
     connect(pSocket, &QWebSocket::disconnected, this, &ChatServer::socketDisconnected);
 
     m_clients << pSocket;
 }
-//! [onNewConnection]
 
-//! [processMessage]
-void ChatServer::processMessage(QString message)
+void ChatServer::processMessage(const QString &message)
 {
-    QWebSocket *pSender = qobject_cast<QWebSocket *>(sender());
-    Q_FOREACH (QWebSocket *pClient, m_clients)
-    {
-        if (pClient != pSender) //don't echo message back to sender
-        {
-            pClient->sendTextMessage(message);
-        }
-    }
-}
-//! [processMessage]
+    QJsonObject jsonMsg = QJsonDocument::fromJson(message.toLatin1()).object();
 
-//! [socketDisconnected]
+    emit playerMoved(QPoint(jsonMsg.value("x").toInt(), jsonMsg.value("y").toInt()));
+    // QWebSocket *pSender = qobject_cast<QWebSocket *>(sender());
+    // Q_FOREACH (QWebSocket *pClient, m_clients)
+    // {
+    //     if (pClient != pSender) //don't echo message back to sender
+    //     {
+    //         pClient->sendTextMessage(message);
+    //     }
+    // }
+}
+
 void ChatServer::socketDisconnected()
 {
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
@@ -105,4 +104,3 @@ void ChatServer::socketDisconnected()
         pClient->deleteLater();
     }
 }
-//! [socketDisconnected]
