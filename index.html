@@ -104,13 +104,21 @@
             //     }
             // }
             initWebSocket();
-            function move(e){
-                //do something on mouse move
-                console.log("WAAAAAAAAAHHHH! " + e.clientX + " " + e.clientY)
+            function handleMouseMove(e){
                 websocket.send(JSON.stringify({x: e.clientX, y: e.clientY}));
             }
-            document.body.addEventListener('mousemove', move)
-
+            function handleTouchStart(e) {
+                e.preventDefault()
+            }
+            function handleTouchMove(e) {
+                for (var i=0; i < e.changedTouches.length; i++) {
+                    var t = e.changedTouches[i]
+                    websocket.send(JSON.stringify({x: t.pageX, y: t.pageY}));
+                }
+            }
+            document.body.addEventListener('mousemove', handleMouseMove)
+            document.body.addEventListener("touchstart", handleTouchStart);
+            document.body.addEventListener("touchmove", handleTouchMove);
         </script>
     </body>
 </html>
