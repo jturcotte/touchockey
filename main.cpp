@@ -43,12 +43,12 @@
 #include <QQuickView>
 #include <QPoint>
 #include <QDebug>
-#include "chatserver.h"
+#include "gameserver.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication a(argc, argv);
-    ChatServer server(1234);
+    GameServer server(1234);
 
     QQuickView view(QUrl::fromEncoded("main.qml"));
     view.setResizeMode(QQuickView::SizeRootObjectToView);

@@ -38,8 +38,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef CHATSERVER_H
-#define CHATSERVER_H
+#ifndef GAMESERVER_H
+#define GAMESERVER_H
 
 #include <QtCore/QObject>
 #include <QtCore/QList>
@@ -48,12 +48,12 @@
 QT_FORWARD_DECLARE_CLASS(QWebSocketServer)
 QT_FORWARD_DECLARE_CLASS(QWebSocket)
 
-class ChatServer : public QObject
+class GameServer : public QObject
 {
     Q_OBJECT
 public:
-    ChatServer(quint16 port, QObject *parent = Q_NULLPTR);
-    ~ChatServer();
+    GameServer(quint16 port, QObject *parent = Q_NULLPTR);
+    ~GameServer();
 
 signals:
     void playerMoved(const QVariant &pos);
@@ -70,4 +70,4 @@ private:
 
 
 
-#endif //CHATSERVER_H
+#endif //GAMESERVER_H

@@ -38,7 +38,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "chatserver.h"
+#include "gameserver.h"
 #include "QtWebSockets/QWebSocketServer"
 #include "QtWebSockets/QWebSocket"
 #include <QtCore/QDebug>
@@ -48,39 +48,39 @@
 
 QT_USE_NAMESPACE
 
-ChatServer::ChatServer(quint16 port, QObject *parent) :
+GameServer::GameServer(quint16 port, QObject *parent) :
     QObject(parent),
     m_wsServer(nullptr),
     m_clients()
 {
-    m_wsServer = new QWebSocketServer(QStringLiteral("Chat Server"),
+    m_wsServer = new QWebSocketServer(QStringLiteral("Game Server"),
                                               QWebSocketServer::NonSecureMode,
                                               this);
     if (m_wsServer->listen(QHostAddress::Any, port))
     {
-        qDebug() << "Chat Server listening on port" << port;
+        qDebug() << "Game Server listening on port" << port;
         connect(m_wsServer, &QWebSocketServer::newConnection,
-                this, &ChatServer::onNewConnection);
+                this, &GameServer::onNewConnection);
     }
 }
 
-ChatServer::~ChatServer()
+GameServer::~GameServer()
 {
     m_wsServer->close();
     qDeleteAll(m_clients.begin(), m_clients.end());
 }
 
-void ChatServer::onNewConnection()
+void GameServer::onNewConnection()
 {
     QWebSocket *pSocket = m_wsServer->nextPendingConnection();
 
-    connect(pSocket, &QWebSocket::textMessageReceived, this, &ChatServer::processMessage);
-    connect(pSocket, &QWebSocket::disconnected, this, &ChatServer::socketDisconnected);
+    connect(pSocket, &QWebSocket::textMessageReceived, this, &GameServer::processMessage);
+    connect(pSocket, &QWebSocket::disconnected, this, &GameServer::socketDisconnected);
 
     m_clients << pSocket;
 }
 
-void ChatServer::processMessage(const QString &message)
+void GameServer::processMessage(const QString &message)
 {
     QJsonObject jsonMsg = QJsonDocument::fromJson(message.toLatin1()).object();
 
@@ -95,7 +95,7 @@ void ChatServer::processMessage(const QString &message)
     // }
 }
 
-void ChatServer::socketDisconnected()
+void GameServer::socketDisconnected()
 {
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
     if (pClient)
