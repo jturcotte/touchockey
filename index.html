@@ -40,7 +40,7 @@
                 }
             }
 
-            var wsUri = "ws://localhost:1234";
+            var wsUri = window.location.protocol.replace('http', 'ws') + '//' + window.location.host
             var websocket = null;
 
             function initWebSocket() {
