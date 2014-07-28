@@ -28,11 +28,22 @@
             }
 
             var lastX, lastY, lastTime
-            function handleMouseMove(e){
-                websocket.send(JSON.stringify({x: e.clientX - lastX, y: e.clientY - lastY, t: e.timeStamp - lastTime}));
+            function handleMouseDown(e){
+                e.preventDefault()
                 lastX = e.clientX
                 lastY = e.clientY
                 lastTime = e.timeStamp
+            }
+            function handleMouseUp(e){
+            }
+            function handleMouseMove(e){
+                console.log(e.which)
+                if (e.which) {
+                    websocket.send(JSON.stringify({x: e.clientX - lastX, y: e.clientY - lastY, t: e.timeStamp - lastTime}));
+                    lastX = e.clientX
+                    lastY = e.clientY
+                    lastTime = e.timeStamp
+                }
             }
             function handleTouchStart(e) {
                 e.preventDefault()
@@ -47,6 +58,8 @@
                 lastY = t.pageY
                 lastTime = e.timeStamp
             }
+            document.body.addEventListener('mousedown', handleMouseDown)
+            document.body.addEventListener('mouseup', handleMouseUp)
             document.body.addEventListener('mousemove', handleMouseMove)
             document.body.addEventListener("touchstart", handleTouchStart);
             document.body.addEventListener("touchmove", handleTouchMove);

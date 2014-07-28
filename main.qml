@@ -5,8 +5,8 @@ import Box2D 1.1
 World {
     function playerMoved(x, y, time) {
         print(x + " " + y + " : " + time)
-        var ratio = pixelsPerMeter * time / 1000
-        ball.linearVelocity = Qt.point(ball.linearVelocity.x + x / ratio, ball.linearVelocity.y + y / ratio)
+        var ratio = pixelsPerMeter * timeStep
+        controlSurface.linearVelocity = Qt.point(controlSurface.linearVelocity.x + x / ratio, controlSurface.linearVelocity.y + y / ratio)
     }
 
     id: world
@@ -15,7 +15,7 @@ World {
     gravity: Qt.point(0, 0)
 
     onStepped: {
-        ball.linearVelocity = Qt.point(0, 0)
+        controlSurface.linearVelocity = Qt.point(0, 0)
     }
     Body {
         id: leftWall
@@ -61,12 +61,24 @@ World {
             // anchors.margins: -1
         }
     }
-
-    MouseArea {
-        anchors.fill: parent
-        hoverEnabled: true
-        onPositionChanged: {
-            playerMoved(mouse.x, mouse.y, 16)
+    Body {
+        id: controlSurface
+        property var posAfterStep: Qt.point(x, y)
+        width: 200;
+        height: 200;
+        sleepingAllowed: true
+        fixedRotation: true
+        bodyType: Body.Kinematic
+        fixtures: Box {
+            anchors.fill: parent
+            density: 1;
+            friction: 0.4;
+            restitution: 0.5;
+        }
+        Rectangle {
+            anchors.fill: parent
+            color: "blue"
+            opacity: 0.4
         }
     }
 }
