@@ -27,17 +27,25 @@
                 console.log('ERROR: ' + exception);
             }
 
+            var lastX, lastY, lastTime
             function handleMouseMove(e){
-                websocket.send(JSON.stringify({x: e.clientX, y: e.clientY}));
+                websocket.send(JSON.stringify({x: e.clientX - lastX, y: e.clientY - lastY, t: e.timeStamp - lastTime}));
+                lastX = e.clientX
+                lastY = e.clientY
+                lastTime = e.timeStamp
             }
             function handleTouchStart(e) {
                 e.preventDefault()
+                lastX = e.changedTouches[0].pageX
+                lastY = e.changedTouches[0].pageY
+                lastTime = e.timeStamp
             }
             function handleTouchMove(e) {
-                for (var i=0; i < e.changedTouches.length; i++) {
-                    var t = e.changedTouches[i]
-                    websocket.send(JSON.stringify({x: t.pageX, y: t.pageY}));
-                }
+                var t = e.changedTouches[0]
+                websocket.send(JSON.stringify({x: t.pageX - lastX, y: t.pageY - lastY, t: e.timeStamp - lastTime}));
+                lastX = t.pageX
+                lastY = t.pageY
+                lastTime = e.timeStamp
             }
             document.body.addEventListener('mousemove', handleMouseMove)
             document.body.addEventListener("touchstart", handleTouchStart);

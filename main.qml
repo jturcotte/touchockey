@@ -3,15 +3,20 @@ import QtQuick 2.2
 import Box2D 1.1
 
 World {
-    function playerMoved(p) {
-        print(p.x + " " + p.y)
-        ball.applyLinearImpulse(Qt.point(10, 10), Qt.point(0, 0))
+    function playerMoved(x, y, time) {
+        print(x + " " + y + " : " + time)
+        var ratio = pixelsPerMeter * time / 1000
+        ball.linearVelocity = Qt.point(ball.linearVelocity.x + x / ratio, ball.linearVelocity.y + y / ratio)
     }
 
     id: world
     width: 1024
     height: 768
     gravity: Qt.point(0, 0)
+
+    onStepped: {
+        ball.linearVelocity = Qt.point(0, 0)
+    }
     Body {
         id: leftWall
         anchors { top: parent.top; bottom: parent.bottom; right: parent.left}
@@ -42,6 +47,7 @@ World {
         width: 100;
         height: 100;
         sleepingAllowed: true
+        fixedRotation: true
         bodyType: Body.Dynamic
         fixtures: Box {
             anchors.fill: parent
@@ -60,7 +66,7 @@ World {
         anchors.fill: parent
         hoverEnabled: true
         onPositionChanged: {
-            playerMoved(Qt.point(mouse.x, mouse.y))
+            playerMoved(mouse.x, mouse.y, 16)
         }
     }
 }

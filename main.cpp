@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
     QQuickView view(QUrl::fromEncoded("main.qml"));
     view.setResizeMode(QQuickView::SizeRootObjectToView);
-    QObject::connect(&server, SIGNAL(playerMoved(const QVariant&)), view.rootObject(), SLOT(playerMoved(const QVariant&)));
+    QObject::connect(&server, SIGNAL(playerMoved(const QVariant&, const QVariant&, const QVariant&)), view.rootObject(), SLOT(playerMoved(const QVariant&, const QVariant&, const QVariant&)));
 
     view.show();
     return a.exec();

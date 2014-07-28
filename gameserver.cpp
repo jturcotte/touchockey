@@ -84,15 +84,7 @@ void GameServer::processMessage(const QString &message)
 {
     QJsonObject jsonMsg = QJsonDocument::fromJson(message.toLatin1()).object();
 
-    emit playerMoved(QPoint(jsonMsg.value("x").toInt(), jsonMsg.value("y").toInt()));
-    // QWebSocket *pSender = qobject_cast<QWebSocket *>(sender());
-    // Q_FOREACH (QWebSocket *pClient, m_clients)
-    // {
-    //     if (pClient != pSender) //don't echo message back to sender
-    //     {
-    //         pClient->sendTextMessage(message);
-    //     }
-    // }
+    emit playerMoved(jsonMsg.value("x").toInt(), jsonMsg.value("y").toInt(), jsonMsg.value("t").toInt());
 }
 
 void GameServer::socketDisconnected()

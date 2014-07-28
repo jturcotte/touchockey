@@ -56,7 +56,7 @@ public:
     ~GameServer();
 
 signals:
-    void playerMoved(const QVariant &pos);
+    void playerMoved(const QVariant &x, const QVariant &y, const QVariant &time);
 
 private slots:
     void onNewConnection();
@@ -67,7 +67,6 @@ private:
     QWebSocketServer *m_wsServer;
     QList<QWebSocket *> m_clients;
 };
-
 
 
 #endif //GAMESERVER_H
