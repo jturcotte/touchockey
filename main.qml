@@ -15,6 +15,8 @@ World {
     gravity: Qt.point(0, 0)
 
     onStepped: {
+        if (controlSurface.linearVelocity.x)
+            console.log(friction.getReactionForce(1/world.timeStep))
         controlSurface.linearVelocity = Qt.point(0, 0)
     }
     Body {
@@ -80,5 +82,18 @@ World {
             color: "blue"
             opacity: 0.4
         }
+    }
+    FrictionJoint {
+        id: friction
+        bodyA: ball
+        bodyB: controlSurface
+        maxForce: 50000
+        maxTorque: 5
+        localAnchorA: bodyA.getLocalCenter()
+        localAnchorB: bodyB.getLocalCenter()
+    }
+    DebugDraw {
+        anchors.fill: parent
+        world: world
     }
 }
