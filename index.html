@@ -70,12 +70,12 @@
             function handleTouchEnd(e) {
                 websocket.send(JSON.stringify({type: 'end'}));
             }
-            document.body.addEventListener('mousedown', handleMouseDown)
-            document.body.addEventListener('mouseup', handleMouseUp)
-            document.body.addEventListener('mousemove', handleMouseMove)
-            document.body.addEventListener("touchstart", handleTouchStart);
-            document.body.addEventListener("touchmove", handleTouchMove);
-            document.body.addEventListener("touchend", handleTouchEnd);
+            document.documentElement.addEventListener('mousedown', handleMouseDown)
+            document.documentElement.addEventListener('mouseup', handleMouseUp)
+            document.documentElement.addEventListener('mousemove', handleMouseMove)
+            document.documentElement.addEventListener("touchstart", handleTouchStart);
+            document.documentElement.addEventListener("touchmove", handleTouchMove);
+            document.documentElement.addEventListener("touchend", handleTouchEnd);
         </script>
     </body>
 </html>
