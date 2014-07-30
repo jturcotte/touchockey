@@ -55,51 +55,74 @@ World {
 
     Body {
         id: ball
-        width: 100;
-        height: 100;
+        width: 50
+        height: 50
+        x: 400
+        y: 400
+        linearDamping: 3.0
+        angularDamping: 3.0
         sleepingAllowed: true
-        fixedRotation: true
         bodyType: Body.Dynamic
-        fixtures: Box {
+        fixtures: Circle {
             anchors.fill: parent
-            density: 1;
-            friction: 0.4;
-            restitution: 0.5;
+            radius: width / 2
+            density: 1
+            friction: 0.4
+            restitution: 0.5
         }
         Rectangle {
             anchors.fill: parent
             color: "red"
-            // anchors.margins: -1
+            radius: width
         }
     }
     Body {
-        id: controlSurface
-        property var posAfterStep: Qt.point(x, y)
-        width: 200;
-        height: 200;
+        id: player
+        width: 100
+        height: 100
+        linearDamping: 5.0
+        angularDamping: 5.0
+        sleepingAllowed: true
+        bodyType: Body.Dynamic
+        fixtures: Circle {
+            anchors.fill: parent
+            radius: width / 2
+            density: 1
+            friction: 0.4
+            restitution: 0.5
+        }
+        Rectangle {
+            anchors.fill: parent
+            color: "blue"
+            radius: width
+        }
+    }
+    Body {
+        id: controlBody
+        width: 200
+        height: 200
         sleepingAllowed: true
         fixedRotation: true
         bodyType: Body.Kinematic
         fixtures: Box {
             anchors.fill: parent
-            density: 1;
-            friction: 0.4;
-            restitution: 0.5;
+            density: 1
+            friction: 0.4
+            restitution: 0.5
+            categories: Fixture.None
         }
-        Rectangle {
-            anchors.fill: parent
-            color: "blue"
-            opacity: 0.4
-        }
+        // Rectangle {
+        //     anchors.fill: parent
+        //     color: "blue"
+        //     opacity: 0.4
+        // }
     }
     FrictionJoint {
         id: friction
-        bodyA: ball
-        bodyB: controlSurface
+        bodyA: _touching ? player : null
+        bodyB: controlBody
         maxForce: 50000
         maxTorque: 5
-        localAnchorA: bodyA.getLocalCenter()
-        localAnchorB: bodyB.getLocalCenter()
     }
     DebugDraw {
         anchors.fill: parent
