@@ -56,7 +56,9 @@ public:
     ~GameServer();
 
 signals:
-    void playerMoved(const QVariant &x, const QVariant &y, const QVariant &time);
+    void touchStart();
+    void touchMove(const QVariant &x, const QVariant &y, const QVariant &time);
+    void touchEnd();
 
 private slots:
     void onNewConnection();

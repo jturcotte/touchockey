@@ -3,21 +3,30 @@ import QtQuick 2.2
 import Box2D 1.1
 
 World {
-    function playerMoved(x, y, time) {
-        print(x + " " + y + " : " + time)
+    function touchStart() {
+        controlBody.x = player.x
+        controlBody.y = player.y
+        _touching = true
+    }
+    function touchEnd() {
+        _touching = false
+    }
+    function touchMove(x, y, time) {
+        // print(x + " " + y + " : " + time)
         var ratio = pixelsPerMeter * timeStep
-        controlSurface.linearVelocity = Qt.point(controlSurface.linearVelocity.x + x / ratio, controlSurface.linearVelocity.y + y / ratio)
+        controlBody.linearVelocity = Qt.point(controlBody.linearVelocity.x + x / ratio, controlBody.linearVelocity.y + y / ratio)
     }
 
+    property bool _touching: false
     id: world
     width: 1024
     height: 768
     gravity: Qt.point(0, 0)
 
     onStepped: {
-        if (controlSurface.linearVelocity.x)
-            console.log(friction.getReactionForce(1/world.timeStep))
-        controlSurface.linearVelocity = Qt.point(0, 0)
+        // if (controlBody.linearVelocity.x)
+        //     console.log(friction.getReactionForce(1/world.timeStep))
+        controlBody.linearVelocity = Qt.point(0, 0)
     }
     Body {
         id: leftWall

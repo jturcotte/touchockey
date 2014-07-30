@@ -33,13 +33,14 @@
                 lastX = e.clientX
                 lastY = e.clientY
                 lastTime = e.timeStamp
+                websocket.send(JSON.stringify({type: 'start'}));
             }
             function handleMouseUp(e){
+                websocket.send(JSON.stringify({type: 'end'}));
             }
             function handleMouseMove(e){
-                console.log(e.which)
                 if (e.which) {
-                    websocket.send(JSON.stringify({x: e.clientX - lastX, y: e.clientY - lastY, t: e.timeStamp - lastTime}));
+                    websocket.send(JSON.stringify({type: 'move', x: e.clientX - lastX, y: e.clientY - lastY, t: e.timeStamp - lastTime}));
                     lastX = e.clientX
                     lastY = e.clientY
                     lastTime = e.timeStamp
@@ -50,19 +51,24 @@
                 lastX = e.changedTouches[0].pageX
                 lastY = e.changedTouches[0].pageY
                 lastTime = e.timeStamp
+                websocket.send(JSON.stringify({type: 'start'}));
             }
             function handleTouchMove(e) {
                 var t = e.changedTouches[0]
-                websocket.send(JSON.stringify({x: t.pageX - lastX, y: t.pageY - lastY, t: e.timeStamp - lastTime}));
+                websocket.send(JSON.stringify({type: 'move', x: t.pageX - lastX, y: t.pageY - lastY, t: e.timeStamp - lastTime}));
                 lastX = t.pageX
                 lastY = t.pageY
                 lastTime = e.timeStamp
+            }
+            function handleTouchEnd(e) {
+                websocket.send(JSON.stringify({type: 'end'}));
             }
             document.body.addEventListener('mousedown', handleMouseDown)
             document.body.addEventListener('mouseup', handleMouseUp)
             document.body.addEventListener('mousemove', handleMouseMove)
             document.body.addEventListener("touchstart", handleTouchStart);
             document.body.addEventListener("touchmove", handleTouchMove);
+            document.body.addEventListener("touchend", handleTouchEnd);
         </script>
     </body>
 </html>
