@@ -5,31 +5,36 @@
     <body>
         <script type="text/javascript">
             var websocket = null;
-            try {
-                if (typeof MozWebSocket == 'function')
-                    WebSocket = MozWebSocket;
-                var wsUri = window.location.protocol.replace('http', 'ws') + '//' + window.location.host
-                websocket = new WebSocket( wsUri );
-                websocket.onopen = function (evt) {
-                    console.log("CONNECTED");
-                };
-                websocket.onclose = function (evt) {
-                    console.log("DISCONNECTED");
-                };
-                websocket.onmessage = function (evt) {
-                    console.log( "Message received :", evt.data );
-                    console.log( evt.data );
-                };
-                websocket.onerror = function (evt) {
-                    console.log('ERROR: ' + evt.data);
-                };
-            } catch (exception) {
-                console.log('ERROR: ' + exception);
+            function initWebSocket() {
+                try {
+                    if (typeof MozWebSocket == 'function')
+                        WebSocket = MozWebSocket;
+                    var wsUri = window.location.protocol.replace('http', 'ws') + '//' + window.location.host
+                    websocket = new WebSocket( wsUri );
+                    websocket.onopen = function (evt) {
+                        console.log("CONNECTED");
+                    };
+                    websocket.onclose = function (evt) {
+                        console.log("DISCONNECTED");
+                    };
+                    websocket.onmessage = function (evt) {
+                        console.log( "Message received :", evt.data );
+                        console.log( evt.data );
+                    };
+                    websocket.onerror = function (evt) {
+                        console.log('ERROR: ' + evt.data);
+                    };
+                } catch (exception) {
+                    console.log('ERROR: ' + exception);
+                }
             }
+            initWebSocket()
 
             var lastX, lastY, lastTime
             function handleMouseDown(e){
                 e.preventDefault()
+                if (websocket.readyState == 3)
+                    initWebSocket()
                 lastX = e.clientX
                 lastY = e.clientY
                 lastTime = e.timeStamp
@@ -48,6 +53,8 @@
             }
             function handleTouchStart(e) {
                 e.preventDefault()
+                if (websocket.readyState == 3)
+                    initWebSocket()
                 lastX = e.changedTouches[0].pageX
                 lastY = e.changedTouches[0].pageY
                 lastTime = e.timeStamp
