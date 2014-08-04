@@ -41,24 +41,32 @@
 #ifndef GAMESERVER_H
 #define GAMESERVER_H
 
-#include <QtCore/QObject>
-#include <QtCore/QList>
 #include <QtCore/QByteArray>
+#include <QtCore/QHash>
+#include <QtCore/QObject>
+#include <qqml.h>
 
 QT_FORWARD_DECLARE_CLASS(QWebSocketServer)
 QT_FORWARD_DECLARE_CLASS(QWebSocket)
+
+class PlayerModel : public QObject
+{
+    Q_OBJECT
+signals:
+    void touchStart();
+    void touchMove(const QVariant &x, const QVariant &y, const QVariant &time);
+    void touchEnd();
+};
 
 class GameServer : public QObject
 {
     Q_OBJECT
 public:
-    GameServer(quint16 port, QObject *parent = Q_NULLPTR);
+    GameServer(quint16 port, QObject *parent = nullptr);
     ~GameServer();
 
 signals:
-    void touchStart();
-    void touchMove(const QVariant &x, const QVariant &y, const QVariant &time);
-    void touchEnd();
+    void playerConnected(const QVariant &player);
 
 private slots:
     void onNewConnection();
@@ -67,8 +75,9 @@ private slots:
 
 private:
     QWebSocketServer *m_wsServer;
-    QList<QWebSocket *> m_clients;
+    QHash<QWebSocket *, std::shared_ptr<PlayerModel>> m_socketPlayerMap;
 };
 
+QML_DECLARE_TYPE(PlayerModel)
 
 #endif //GAMESERVER_H

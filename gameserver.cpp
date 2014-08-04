@@ -48,26 +48,23 @@
 
 QT_USE_NAMESPACE
 
-GameServer::GameServer(quint16 port, QObject *parent) :
-    QObject(parent),
-    m_wsServer(nullptr),
-    m_clients()
+GameServer::GameServer(quint16 port, QObject *parent)
+    : QObject(parent)
+    , m_wsServer(nullptr)
 {
     m_wsServer = new QWebSocketServer(QStringLiteral("Game Server"),
-                                              QWebSocketServer::NonSecureMode,
-                                              this);
-    if (m_wsServer->listen(QHostAddress::Any, port))
-    {
+        QWebSocketServer::NonSecureMode, this);
+    if (m_wsServer->listen(QHostAddress::Any, port)) {
         qDebug() << "Game Server listening on port" << port;
-        connect(m_wsServer, &QWebSocketServer::newConnection,
-                this, &GameServer::onNewConnection);
+        connect(m_wsServer, &QWebSocketServer::newConnection, this, &GameServer::onNewConnection);
     }
 }
 
 GameServer::~GameServer()
 {
     m_wsServer->close();
-    qDeleteAll(m_clients.begin(), m_clients.end());
+    QList<QWebSocket *> sockets = m_socketPlayerMap.keys();
+    qDeleteAll(sockets.begin(), sockets.end());
 }
 
 void GameServer::onNewConnection()
@@ -77,19 +74,22 @@ void GameServer::onNewConnection()
     connect(pSocket, &QWebSocket::textMessageReceived, this, &GameServer::processMessage);
     connect(pSocket, &QWebSocket::disconnected, this, &GameServer::socketDisconnected);
 
-    m_clients << pSocket;
+    std::shared_ptr<PlayerModel> player = std::make_shared<PlayerModel>();
+    m_socketPlayerMap[pSocket] = player;
+    emit playerConnected(qVariantFromValue(player.get()));
 }
 
 void GameServer::processMessage(const QString &message)
 {
     QJsonObject jsonMsg = QJsonDocument::fromJson(message.toLatin1()).object();
+    PlayerModel *player = m_socketPlayerMap[static_cast<QWebSocket *>(sender())].get();
 
     if (jsonMsg.value("type").toString() == QStringLiteral("move"))
-        emit touchMove(jsonMsg.value("x").toInt(), jsonMsg.value("y").toInt(), jsonMsg.value("t").toInt());
+        emit player->touchMove(jsonMsg.value("x").toInt(), jsonMsg.value("y").toInt(), jsonMsg.value("t").toInt());
     else if (jsonMsg.value("type").toString() == QStringLiteral("start"))
-        emit touchStart();
+        emit player->touchStart();
     else if (jsonMsg.value("type").toString() == QStringLiteral("end"))
-        emit touchEnd();
+        emit player->touchEnd();
 }
 
 void GameServer::socketDisconnected()
@@ -97,7 +97,7 @@ void GameServer::socketDisconnected()
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
     if (pClient)
     {
-        m_clients.removeAll(pClient);
+        m_socketPlayerMap.remove(pClient);
         pClient->deleteLater();
     }
 }
