@@ -67,6 +67,7 @@ public:
 
 signals:
     void playerConnected(const QVariant &player);
+    void playerDisconnected(const QVariant &player);
 
 private slots:
     void onNewConnection();

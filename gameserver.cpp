@@ -69,21 +69,23 @@ GameServer::~GameServer()
 
 void GameServer::onNewConnection()
 {
-    QWebSocket *pSocket = m_wsServer->nextPendingConnection();
+    QWebSocket *socket = m_wsServer->nextPendingConnection();
 
-    connect(pSocket, &QWebSocket::textMessageReceived, this, &GameServer::processMessage);
-    connect(pSocket, &QWebSocket::disconnected, this, &GameServer::socketDisconnected);
+    connect(socket, &QWebSocket::textMessageReceived, this, &GameServer::processMessage);
+    connect(socket, &QWebSocket::disconnected, this, &GameServer::socketDisconnected);
 
     std::shared_ptr<PlayerModel> player = std::make_shared<PlayerModel>();
-    m_socketPlayerMap[pSocket] = player;
+    m_socketPlayerMap[socket] = player;
     emit playerConnected(qVariantFromValue(player.get()));
 }
 
 void GameServer::processMessage(const QString &message)
 {
-    QJsonObject jsonMsg = QJsonDocument::fromJson(message.toLatin1()).object();
     PlayerModel *player = m_socketPlayerMap[static_cast<QWebSocket *>(sender())].get();
+    if (!player)
+        return;
 
+    QJsonObject jsonMsg = QJsonDocument::fromJson(message.toLatin1()).object();
     if (jsonMsg.value("type").toString() == QStringLiteral("move"))
         emit player->touchMove(jsonMsg.value("x").toInt(), jsonMsg.value("y").toInt(), jsonMsg.value("t").toInt());
     else if (jsonMsg.value("type").toString() == QStringLiteral("start"))
@@ -94,10 +96,13 @@ void GameServer::processMessage(const QString &message)
 
 void GameServer::socketDisconnected()
 {
-    QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
-    if (pClient)
+    QWebSocket *socket = qobject_cast<QWebSocket *>(sender());
+    if (socket)
     {
-        m_socketPlayerMap.remove(pClient);
-        pClient->deleteLater();
+        std::shared_ptr<PlayerModel> player = m_socketPlayerMap.take(socket);
+        emit playerDisconnected(qVariantFromValue(player.get()));
+
+        m_socketPlayerMap.remove(socket);
+        socket->deleteLater();
     }
 }

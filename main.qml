@@ -6,6 +6,9 @@ World {
     function onPlayerConnected(model) {
         leftTeam.addPlayer(model)
     }
+    function onPlayerDisconnected(model) {
+        leftTeam.removePlayer(model)
+    }
 
     Component {
         id: playerBodyComponent
@@ -103,11 +106,21 @@ World {
                 var b = playerBodyComponent.createObject(world)
                 var c = playerControlComponent.createObject(world, {playerBody: b, model: model})
                 b.setup()
-                players.push(b)
+                players.push(c)
+            }
+            function removePlayer(model) {
+                print("DISCONNECTED! " + model)
+                for (var i = 0; i < players.length; i++)
+                    if (players[i].model === model) {
+                        players[i].playerBody.destroy()
+                        players[i].destroy()
+                        players.splice(i, 1)
+                        return
+                    }
             }
             function setup() {
                 for (var i = 0; i < players.length; i++) {
-                    players[i].setup()
+                    players[i].playerBody.setup()
                 }
             }
             property int score: 0
