@@ -87,7 +87,7 @@ void GameServer::processMessage(const QString &message)
 
     QJsonObject jsonMsg = QJsonDocument::fromJson(message.toLatin1()).object();
     if (jsonMsg.value("type").toString() == QStringLiteral("move"))
-        emit player->touchMove(jsonMsg.value("x").toInt(), jsonMsg.value("y").toInt(), jsonMsg.value("t").toInt());
+        emit player->touchMove(jsonMsg.value("x").toDouble(), jsonMsg.value("y").toDouble(), jsonMsg.value("t").toInt());
     else if (jsonMsg.value("type").toString() == QStringLiteral("start"))
         emit player->touchStart();
     else if (jsonMsg.value("type").toString() == QStringLiteral("end"))
