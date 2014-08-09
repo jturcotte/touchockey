@@ -3,6 +3,13 @@ import Box2D 1.1
 
 World {
     id: world
+    pixelsPerMeter: 32
+    property real playerDiameter: 1 * pixelsPerMeter
+    property real puckDiameter: 1/3 * pixelsPerMeter
+    property real goalWidth: 4 * pixelsPerMeter
+    property real rinkWidth: 20 * pixelsPerMeter
+    property real rinkRatio: 1.5
+
     function onPlayerConnected(model) {
         leftTeam.addPlayer(model)
     }
@@ -17,8 +24,8 @@ World {
                 x = 200
                 y = 200
             }
-            width: 100
-            height: 100
+            width: playerDiameter
+            height: playerDiameter
             linearDamping: 5.0
             angularDamping: 5.0
             sleepingAllowed: true
@@ -146,39 +153,23 @@ World {
         font.pointSize: 24
         anchors { right: parent.right; top: parent.top }
     }
-    Body {
-        id: leftWall
-        anchors { top: parent.top; bottom: parent.bottom; right: parent.left}
-        width: 50
-        fixtures: Box { anchors.fill: parent; friction: 1.0 }
-    }
-    Body {
-        id: rightWall
-        anchors { top: parent.top; bottom: parent.bottom; left: parent.right}
-        width: 50
-        fixtures: Box { anchors.fill: parent; friction: 1.0 }
-    }
-    Body {
-        id: topWall
-        anchors { left: parent.left; right: parent.right; bottom: parent.top}
-        height: 50
-        fixtures: Box { anchors.fill: parent; friction: 1.0 }
-    }
-    Body {
-        id: bottomWall
-        anchors { left: parent.left; right: parent.right; top: parent.bottom}
-        height: 50
-        fixtures: Box { anchors.fill: parent; friction: 1.0 }
+
+    Rectangle {
+        id: rink
+        color: "white"
+        width: rinkWidth
+        height: rinkWidth / rinkRatio
+        anchors.centerIn: parent
     }
     Body {
         id: leftGoal
-        anchors { left: parent.left; verticalCenter: parent.verticalCenter}
+        anchors { right: rink.left; verticalCenter: rink.verticalCenter}
         width: 100
-        height: 500
+        height: goalWidth
         fixtures: Box {
             anchors.fill: parent; friction: 1.0
             sensor: true
-            collidesWith: ball.collitionCategory
+            collidesWith: puck.collitionCategory
             onBeginContact: {
                 leftTeam.scored()
                 setupGame()
@@ -191,13 +182,13 @@ World {
     }
     Body {
         id: rightGoal
-        anchors { right: parent.right; verticalCenter: parent.verticalCenter}
+        anchors { left: rink.right; verticalCenter: rink.verticalCenter}
         width: 100
-        height: 500
+        height: goalWidth
         fixtures: Box {
             anchors.fill: parent; friction: 1.0
             sensor: true
-            collidesWith: ball.collitionCategory
+            collidesWith: puck.collitionCategory
             onBeginContact: {
                 rightTeam.scored()
                 setupGame()
@@ -208,9 +199,45 @@ World {
             }
         }
     }
+    Body {
+        id: topLeftWall
+        anchors { top: rink.top; bottom: leftGoal.top; right: rink.left}
+        width: 50
+        fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
+    }
+    Body {
+        id: bottomLeftWall
+        anchors { top: leftGoal.bottom; bottom: rink.bottom; right: rink.left}
+        width: 50
+        fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
+    }
+    Body {
+        id: topRightWall
+        anchors { top: rink.top; bottom: rightGoal.top; left: rink.right}
+        width: 50
+        fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
+    }
+    Body {
+        id: bottomRightWall
+        anchors { top: rightGoal.bottom; bottom: rink.bottom; left: rink.right}
+        width: 50
+        fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
+    }
+    Body {
+        id: topWall
+        anchors { left: rink.left; right: rink.right; bottom: rink.top}
+        height: 50
+        fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
+    }
+    Body {
+        id: bottomWall
+        anchors { left: rink.left; right: rink.right; top: rink.bottom}
+        height: 50
+        fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
+    }
 
     Body {
-        id: ball
+        id: puck
         property int collitionCategory: Fixture.Category10
 
         function setup() {
@@ -219,8 +246,8 @@ World {
             linearVelocity = Qt.point(0, 0)
             angularVelocity = 0
         }
-        width: 50
-        height: 50
+        width: puckDiameter
+        height: puckDiameter
         linearDamping: 3.0
         angularDamping: 3.0
         sleepingAllowed: true
@@ -231,7 +258,7 @@ World {
             density: 1
             friction: 0.4
             restitution: 1
-            categories: ball.collitionCategory
+            categories: puck.collitionCategory
             Rectangle {
                 anchors.fill: parent
                 color: "red"
@@ -242,7 +269,7 @@ World {
 
     Component.onCompleted: setupGame()
     function setupGame() {
-        ball.setup()
+        puck.setup()
         leftTeam.setup()
         rightTeam.setup()
     }
