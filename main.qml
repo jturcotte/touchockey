@@ -29,6 +29,7 @@ World {
             linearDamping: 5.0
             angularDamping: 5.0
             sleepingAllowed: true
+            bullet: true // Ensures that the player doesn't jump over bodies within a step
             bodyType: Body.Dynamic
             fixtures: Circle {
                 anchors.fill: parent
