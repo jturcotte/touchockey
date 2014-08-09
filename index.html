@@ -30,14 +30,13 @@
             }
             initWebSocket()
 
-            var lastX, lastY, lastTime
+            var lastMouse
+            var lastTouch
             function handleMouseDown(e){
                 e.preventDefault()
                 if (websocket.readyState == 3)
                     initWebSocket()
-                lastX = e.clientX
-                lastY = e.clientY
-                lastTime = e.timeStamp
+                lastMouse = e
                 websocket.send(JSON.stringify({type: 'start'}));
             }
             function handleMouseUp(e){
@@ -45,30 +44,41 @@
             }
             function handleMouseMove(e){
                 if (e.which) {
-                    websocket.send(JSON.stringify({type: 'move', x: e.clientX - lastX, y: e.clientY - lastY, t: e.timeStamp - lastTime}));
-                    lastX = e.clientX
-                    lastY = e.clientY
-                    lastTime = e.timeStamp
+                    websocket.send(JSON.stringify({type: 'move', x: e.clientX - lastMouse.clientX, y: e.clientY - lastMouse.clientY, t: e.timeStamp - lastMouse.timeStamp}));
+                    lastMouse = e
                 }
             }
             function handleTouchStart(e) {
                 e.preventDefault()
                 if (websocket.readyState == 3)
                     initWebSocket()
-                lastX = e.changedTouches[0].pageX
-                lastY = e.changedTouches[0].pageY
-                lastTime = e.timeStamp
-                websocket.send(JSON.stringify({type: 'start'}));
+
+                if (!lastTouch) {
+                    websocket.send(JSON.stringify({type: 'start'}));
+                    lastTouch = e.changedTouches[0]
+                    lastTouch.timeStamp = e.timeStamp
+                }
             }
             function handleTouchMove(e) {
-                var t = e.changedTouches[0]
-                websocket.send(JSON.stringify({type: 'move', x: t.pageX - lastX, y: t.pageY - lastY, t: e.timeStamp - lastTime}));
-                lastX = t.pageX
-                lastY = t.pageY
-                lastTime = e.timeStamp
+                if (!lastTouch)
+                    return
+                for (var i = 0; i < e.changedTouches.length; i++) {
+                    var t = e.changedTouches[i]
+                    if (t.identifier == lastTouch.identifier) {
+                        websocket.send(JSON.stringify({type: 'move', x: t.pageX - lastTouch.pageX, y: t.pageY - lastTouch.pageY, t: e.timeStamp - lastTouch.timeStamp}));
+                        lastTouch = t
+                        lastTouch.timeStamp = e.timeStamp
+                    }
+                }
             }
             function handleTouchEnd(e) {
-                websocket.send(JSON.stringify({type: 'end'}));
+                if (!lastTouch)
+                    return
+                for (var i = 0; i < e.changedTouches.length; i++)
+                    if (e.changedTouches[i].identifier == lastTouch.identifier) {
+                        websocket.send(JSON.stringify({type: 'end'}));
+                        lastTouch = null
+                    }
             }
             document.documentElement.addEventListener('mousedown', handleMouseDown)
             document.documentElement.addEventListener('mouseup', handleMouseUp)
