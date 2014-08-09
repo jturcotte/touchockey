@@ -49,39 +49,59 @@
 QT_USE_NAMESPACE
 
 GameServer::GameServer(quint16 port, QObject *parent)
-    : QObject(parent)
-    , m_wsServer(nullptr)
+    : QThread(parent)
+    , m_port(port)
 {
-    m_wsServer = new QWebSocketServer(QStringLiteral("Game Server"),
-        QWebSocketServer::NonSecureMode, this);
-    if (m_wsServer->listen(QHostAddress::Any, port)) {
-        qDebug() << "Game Server listening on port" << port;
-        connect(m_wsServer, &QWebSocketServer::newConnection, this, &GameServer::onNewConnection);
-    }
+    start();
 }
 
 GameServer::~GameServer()
 {
+    quit();
+    wait();
+}
+
+void GameServer::run()
+{
+    GameServerImpl impl(this, m_port);
+    QThread::run();
+}
+
+GameServerImpl::GameServerImpl(GameServer *pub, quint16 port)
+    : m_pub(pub)
+    , m_wsServer(new QWebSocketServer(QStringLiteral("Game Server"), QWebSocketServer::NonSecureMode, this))
+{
+    if (m_wsServer->listen(QHostAddress::Any, port)) {
+        qDebug() << "Game Server listening on port" << port;
+        connect(m_wsServer, &QWebSocketServer::newConnection, this, &GameServerImpl::onNewConnection);
+    }
+}
+
+GameServerImpl::~GameServerImpl()
+{
     m_wsServer->close();
+    foreach (PlayerModel *player, m_socketPlayerMap)
+        player->deleteLater();
     QList<QWebSocket *> sockets = m_socketPlayerMap.keys();
     qDeleteAll(sockets.begin(), sockets.end());
 }
 
-void GameServer::onNewConnection()
+void GameServerImpl::onNewConnection()
 {
     QWebSocket *socket = m_wsServer->nextPendingConnection();
 
-    connect(socket, &QWebSocket::textMessageReceived, this, &GameServer::processMessage);
-    connect(socket, &QWebSocket::disconnected, this, &GameServer::socketDisconnected);
+    connect(socket, &QWebSocket::textMessageReceived, this, &GameServerImpl::processMessage);
+    connect(socket, &QWebSocket::disconnected, this, &GameServerImpl::socketDisconnected);
 
-    std::shared_ptr<PlayerModel> player = std::make_shared<PlayerModel>();
+    auto player = new PlayerModel;
+    player->moveToThread(m_pub->thread());
     m_socketPlayerMap[socket] = player;
-    emit playerConnected(qVariantFromValue(player.get()));
+    emit m_pub->playerConnected(qVariantFromValue(player));
 }
 
-void GameServer::processMessage(const QString &message)
+void GameServerImpl::processMessage(const QString &message)
 {
-    PlayerModel *player = m_socketPlayerMap[static_cast<QWebSocket *>(sender())].get();
+    PlayerModel *player = m_socketPlayerMap[static_cast<QWebSocket *>(sender())];
     if (!player)
         return;
 
@@ -94,15 +114,14 @@ void GameServer::processMessage(const QString &message)
         emit player->touchEnd();
 }
 
-void GameServer::socketDisconnected()
+void GameServerImpl::socketDisconnected()
 {
     QWebSocket *socket = qobject_cast<QWebSocket *>(sender());
-    if (socket)
-    {
-        std::shared_ptr<PlayerModel> player = m_socketPlayerMap.take(socket);
-        emit playerDisconnected(qVariantFromValue(player.get()));
+    if (socket) {
+        PlayerModel *player = m_socketPlayerMap.take(socket);
+        emit m_pub->playerDisconnected(qVariantFromValue(player));
 
-        m_socketPlayerMap.remove(socket);
         socket->deleteLater();
+        player->deleteLater();
     }
 }

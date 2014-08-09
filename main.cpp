@@ -53,7 +53,8 @@ int main(int argc, char *argv[])
     QQuickView view(QUrl::fromEncoded("main.qml"));
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setColor(Qt::darkBlue);
-    QObject::connect(&server, SIGNAL(playerConnected(const QVariant &)), view.rootObject(), SLOT(onPlayerConnected(const QVariant &)));
+    // Use a blocking queued connection to make sure that we've initialized the QML Connection before emitting any message from the server thread.
+    QObject::connect(&server, SIGNAL(playerConnected(const QVariant &)), view.rootObject(), SLOT(onPlayerConnected(const QVariant &)), Qt::BlockingQueuedConnection);
     QObject::connect(&server, SIGNAL(playerDisconnected(const QVariant &)), view.rootObject(), SLOT(onPlayerDisconnected(const QVariant &)));
 
     view.show();
