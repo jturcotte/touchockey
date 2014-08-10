@@ -4,29 +4,32 @@
     </head>
     <body>
         <script type="text/javascript">
-            var websocket = null;
+            var websocket = null
             function initWebSocket() {
                 try {
                     if (typeof MozWebSocket == 'function')
-                        WebSocket = MozWebSocket;
+                        WebSocket = MozWebSocket
                     var wsUri = window.location.protocol.replace('http', 'ws') + '//' + window.location.host
-                    websocket = new WebSocket( wsUri );
+                    websocket = new WebSocket( wsUri )
                     websocket.onopen = function (evt) {
-                        console.log("CONNECTED");
-                    };
+                        console.log("CONNECTED")
+                    }
                     websocket.onclose = function (evt) {
-                        console.log("DISCONNECTED");
-                    };
+                        console.log("DISCONNECTED")
+                    }
                     websocket.onmessage = function (evt) {
-                        console.log( "Message received :", evt.data );
-                        console.log( evt.data );
-                    };
+                        console.log( "Message received :", evt.data )
+                        console.log( evt.data )
+                    }
                     websocket.onerror = function (evt) {
-                        console.log('ERROR: ' + evt.data);
-                    };
+                        console.log('ERROR: ' + evt.data)
+                    }
                 } catch (exception) {
-                    console.log('ERROR: ' + exception);
+                    console.log('ERROR: ' + exception)
                 }
+            }
+            Touch.prototype.clone = function() {
+                return {identifier: this.identifier, pageX: this.pageX, pageY: this.pageY}
             }
             initWebSocket()
 
@@ -37,14 +40,14 @@
                 if (websocket.readyState == 3)
                     initWebSocket()
                 lastMouse = e
-                websocket.send(JSON.stringify({type: 'start'}));
+                websocket.send(JSON.stringify({type: 'start'}))
             }
             function handleMouseUp(e){
-                websocket.send(JSON.stringify({type: 'end'}));
+                websocket.send(JSON.stringify({type: 'end'}))
             }
             function handleMouseMove(e){
                 if (e.which) {
-                    websocket.send(JSON.stringify({type: 'move', x: e.clientX - lastMouse.clientX, y: e.clientY - lastMouse.clientY, t: e.timeStamp - lastMouse.timeStamp}));
+                    websocket.send(JSON.stringify({type: 'move', x: e.clientX - lastMouse.clientX, y: e.clientY - lastMouse.clientY, t: e.timeStamp - lastMouse.timeStamp}))
                     lastMouse = e
                 }
             }
@@ -54,8 +57,9 @@
                     initWebSocket()
 
                 if (!lastTouch) {
-                    websocket.send(JSON.stringify({type: 'start'}));
-                    lastTouch = e.changedTouches[0]
+                    websocket.send(JSON.stringify({type: 'start'}))
+                    var t = e.changedTouches[0]
+                    lastTouch = t.clone()
                     lastTouch.timeStamp = e.timeStamp
                 }
             }
@@ -65,8 +69,8 @@
                 for (var i = 0; i < e.changedTouches.length; i++) {
                     var t = e.changedTouches[i]
                     if (t.identifier == lastTouch.identifier) {
-                        websocket.send(JSON.stringify({type: 'move', x: t.pageX - lastTouch.pageX, y: t.pageY - lastTouch.pageY, t: e.timeStamp - lastTouch.timeStamp}));
-                        lastTouch = t
+                        websocket.send(JSON.stringify({type: 'move', x: t.pageX - lastTouch.pageX, y: t.pageY - lastTouch.pageY, t: e.timeStamp - lastTouch.timeStamp}))
+                        lastTouch = t.clone()
                         lastTouch.timeStamp = e.timeStamp
                     }
                 }
