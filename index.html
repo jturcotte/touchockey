@@ -4,7 +4,12 @@
         <meta name="viewport" content="initial-scale=1, maximum-scale=1">
     </head>
     <body>
+    <div id="fullscreenBtn" style="background-color: grey; position: fixed; top: 5px; right: 5px; width: 40px; height: 40px;">
+        <img style="width: 100%;" src="client/IKONS/SVG/resize_1.svg"/>
+    </div>
+        <script src="client/tap.js"></script>
         <script type="text/javascript">
+            // WebSockets stuff
             var websocket = null
             function initWebSocket() {
                 try {
@@ -29,11 +34,12 @@
                     console.log('ERROR: ' + exception)
                 }
             }
+            initWebSocket()
+
+            // Input events stuff
             Touch.prototype.clone = function() {
                 return {identifier: this.identifier, pageX: this.pageX, pageY: this.pageY}
             }
-            initWebSocket()
-
             var lastMouse
             var lastTouch
             function handleMouseDown(e){
@@ -85,12 +91,42 @@
                         lastTouch = null
                     }
             }
+
             document.documentElement.addEventListener('mousedown', handleMouseDown)
             document.documentElement.addEventListener('mouseup', handleMouseUp)
             document.documentElement.addEventListener('mousemove', handleMouseMove)
-            document.documentElement.addEventListener("touchstart", handleTouchStart);
-            document.documentElement.addEventListener("touchmove", handleTouchMove);
-            document.documentElement.addEventListener("touchend", handleTouchEnd);
+            document.documentElement.addEventListener('touchstart', handleTouchStart)
+            document.documentElement.addEventListener('touchmove', handleTouchMove)
+            document.documentElement.addEventListener('touchend', handleTouchEnd)
+            document.documentElement.addEventListener('touchend', handleTouchEnd)
+
+            // Fullscreen stuff
+            var fullscreenFn = Element.prototype.requestFullscreen
+                || Element.prototype.webkitRequestFullscreen
+                || Element.prototype.msRequestFullscreen
+                || Element.prototype.mozRequestFullScreen
+
+            function handleFullscreen(e) {
+                fullscreenFn.call(document.documentElement)
+                document.getElementById('fullscreenBtn').style.display = "none"
+            }
+            function handleFullscreenChange(e) {
+                if (!document.fullscreenElement
+                    && !document.webkitFullscreenElement
+                    && !document.mozFullscreenElement
+                    && !document.msFullscreenElement)
+                    document.getElementById('fullscreenBtn').style.display = null
+            }
+            document.addEventListener('fullscreenchange', handleFullscreenChange)
+            document.addEventListener('msfullscreenchange', handleFullscreenChange)
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange)
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+            var fullscreenBtn = document.getElementById('fullscreenBtn')
+            if (fullscreenFn) {
+                var tap = new Tap(fullscreenBtn);
+                fullscreenBtn.addEventListener('tap', handleFullscreen);
+            } else
+                fullscreenBtn.style.display = "none"
         </script>
     </body>
 </html>
