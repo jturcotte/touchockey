@@ -47,6 +47,8 @@
 #include <QThread>
 #include <qqml.h>
 
+QT_FORWARD_DECLARE_CLASS(QTcpSocket)
+QT_FORWARD_DECLARE_CLASS(QNetworkRequest)
 QT_FORWARD_DECLARE_CLASS(QWebSocketServer)
 QT_FORWARD_DECLARE_CLASS(QWebSocket)
 
@@ -88,6 +90,7 @@ private slots:
     void onNewConnection();
     void processMessage(const QString &message);
     void socketDisconnected();
+    void handleNormalHttpRequest(const QNetworkRequest &request, QTcpSocket *connection);
 
 private:
     GameServer *m_pub;

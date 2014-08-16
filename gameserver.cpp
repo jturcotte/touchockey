@@ -42,9 +42,12 @@
 #include "QtWebSockets/QWebSocketServer"
 #include "QtWebSockets/QWebSocket"
 #include <QtCore/QDebug>
-#include <QPoint>
+#include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QMimeDatabase>
+#include <QPoint>
+#include <QTcpSocket>
 
 QT_USE_NAMESPACE
 
@@ -74,6 +77,7 @@ GameServerImpl::GameServerImpl(GameServer *pub, quint16 port)
     if (m_wsServer->listen(QHostAddress::Any, port)) {
         qDebug() << "Game Server listening on port" << port;
         connect(m_wsServer, &QWebSocketServer::newConnection, this, &GameServerImpl::onNewConnection);
+        connect(m_wsServer, &QWebSocketServer::normalHttpRequest, this, &GameServerImpl::handleNormalHttpRequest);
     }
 }
 
@@ -97,6 +101,32 @@ void GameServerImpl::onNewConnection()
     player->moveToThread(m_pub->thread());
     m_socketPlayerMap[socket] = player;
     emit m_pub->playerConnected(qVariantFromValue(player));
+}
+
+void GameServerImpl::handleNormalHttpRequest(const QNetworkRequest &request, QTcpSocket *connection)
+{
+    QString path = request.url().path();
+    Q_ASSERT(path.startsWith("/"));
+    if (path == "/")
+        path = QStringLiteral("/index.html");
+
+    path.prepend("client");
+    // qWarning() << path << QMimeDatabase().mimeTypeForFile(path).name();
+    QFile file(path);
+    if (file.open(QFile::ReadOnly)) {
+        connection->write("HTTP/1.1 200 OK\r\n");
+        connection->write("Connection: close\r\n");
+        connection->write("Content-Type: " + QMimeDatabase().mimeTypeForFile(path).name().toLatin1() + "\r\n");
+        connection->write("Content-Length: " + QByteArray::number(file.size()) + "\r\n");
+        connection->write("\r\n");
+        while (!file.atEnd())
+            connection->write(file.read(2048));
+    } else {
+        connection->write("HTTP/1.1 404 Not Found\r\n");
+        connection->write("Connection: close\r\n");
+        connection->write("\r\n");
+    }
+    connection->close();
 }
 
 void GameServerImpl::processMessage(const QString &message)
