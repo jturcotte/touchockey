@@ -117,7 +117,7 @@ void GameServerImpl::handleNormalHttpRequest(const QByteArray &method, const QNe
     if (method == "POST") {
         QString path = request.url().path();
         if (path == "/data/userinfo") {
-            auto jsonData = QJsonDocument::fromJson(body);
+            auto jsonDoc = QJsonDocument::fromJson(body);
             QUuid playerId;
             QList<QNetworkCookie> cookies = request.header(QNetworkRequest::CookieHeader).value<QList<QNetworkCookie>>();
             for (const QNetworkCookie &cookie : cookies)
@@ -134,7 +134,7 @@ void GameServerImpl::handleNormalHttpRequest(const QByteArray &method, const QNe
             }
             connection->write("\r\n");
 
-            setPlayerInfo(playerId, jsonData);
+            setPlayerInfo(playerId, jsonDoc);
         } else {
             connection->write("HTTP/1.1 404 Not Found\r\n");
             connection->write("Connection: close\r\n");
@@ -145,6 +145,24 @@ void GameServerImpl::handleNormalHttpRequest(const QByteArray &method, const QNe
         Q_ASSERT(path.startsWith("/"));
         if (path == "/")
             path = QStringLiteral("/index.html");
+
+        if (path == "/data/userinfo") {
+            QUuid playerId;
+            QList<QNetworkCookie> cookies = request.header(QNetworkRequest::CookieHeader).value<QList<QNetworkCookie>>();
+            QJsonDocument jsonDoc;
+            for (const QNetworkCookie &cookie : cookies)
+                if (cookie.name() == "pid") {
+                    playerId = QUuid::fromRfc4122(QByteArray::fromHex(cookie.value()));
+                    jsonDoc.setObject(m_playerInfoMap.value(playerId));
+                }
+            QByteArray jsonData = jsonDoc.toJson(QJsonDocument::Compact);
+            connection->write("HTTP/1.1 200 OK\r\n");
+            connection->write("Connection: close\r\n");
+            connection->write("Content-Type: application/json\r\n");
+            connection->write("Content-Length: " + QByteArray::number(jsonData.size()) + "\r\n");
+            connection->write("\r\n");
+            connection->write(jsonData);
+        }
 
         path.prepend("client");
         QFile file(path);

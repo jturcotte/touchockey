@@ -1,26 +1,37 @@
 <html>
 <body>
-<form id="userInfoForm" method="GET" action="controller.html">
-Name: <input type="text" name="playerName">
-<input type="submit">
+<form id="userInfoForm">
+    Name: <input type="text" name="playerName">
+    <input type="submit">
 </form>
 <script>
-    function handleUserInfoFormSubmit(e) {
+    var form = document.getElementById('userInfoForm')
+
+    var xhr = new XMLHttpRequest()
+    xhr.onload = function() {
+        var o = JSON.parse(this.responseText)
+        for (var name in o) {
+            var e = form.elements.namedItem(name)
+            if (e) e.value = o[name]
+        }
+    }
+    xhr.open("GET", "/data/userinfo", true)
+    xhr.send()
+
+    form.addEventListener('submit', function(e) {
         e.preventDefault()
         var o = {}
         for (var i = 0; i < e.target.elements.length; i++) {
             var input = e.target.elements[i]
             if (input.name)
                 o[input.name] = input.value
-        };
+        }
 
         var xhr = new XMLHttpRequest();
-        xhr.open ("POST", "/data/userinfo", false);
-        xhr.send (JSON.stringify(o));
+        xhr.open("POST", "/data/userinfo", false)
+        xhr.send(JSON.stringify(o))
         window.location.href = "controller.html"
-    }
-
-    document.getElementById('userInfoForm').addEventListener('submit', handleUserInfoFormSubmit)
+    })
 </script>
 </body>
 </html>
