@@ -1,132 +1,26 @@
 <html>
-    <head>
-        <title>WebSocket Remote Game Controller</title>
-        <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-    </head>
-    <body>
-    <div id="fullscreenBtn" style="background-color: grey; position: fixed; top: 5px; right: 5px; width: 40px; height: 40px;">
-        <img style="width: 100%;" src="IKONS/SVG/resize_1.svg"/>
-    </div>
-        <script src="tap.js"></script>
-        <script type="text/javascript">
-            // WebSockets stuff
-            var websocket = null
-            function initWebSocket() {
-                try {
-                    if (typeof MozWebSocket == 'function')
-                        WebSocket = MozWebSocket
-                    var wsUri = window.location.protocol.replace('http', 'ws') + '//' + window.location.host
-                    websocket = new WebSocket( wsUri )
-                    websocket.onopen = function (evt) {
-                        console.log("CONNECTED")
-                    }
-                    websocket.onclose = function (evt) {
-                        console.log("DISCONNECTED")
-                    }
-                    websocket.onmessage = function (evt) {
-                        console.log( "Message received :", evt.data )
-                        console.log( evt.data )
-                    }
-                    websocket.onerror = function (evt) {
-                        console.log('ERROR: ' + evt.data)
-                    }
-                } catch (exception) {
-                    console.log('ERROR: ' + exception)
-                }
-            }
-            initWebSocket()
+<body>
+<form id="userInfoForm" method="GET" action="controller.html">
+Name: <input type="text" name="playerName">
+<input type="submit">
+</form>
+<script>
+    function handleUserInfoFormSubmit(e) {
+        e.preventDefault()
+        var o = {}
+        for (var i = 0; i < e.target.elements.length; i++) {
+            var input = e.target.elements[i]
+            if (input.name)
+                o[input.name] = input.value
+        };
 
-            // Input events stuff
-            Touch.prototype.clone = function() {
-                return {identifier: this.identifier, pageX: this.pageX, pageY: this.pageY}
-            }
-            var lastMouse
-            var lastTouch
-            function handleMouseDown(e){
-                e.preventDefault()
-                if (websocket.readyState == 3)
-                    initWebSocket()
-                lastMouse = e
-                websocket.send(JSON.stringify({type: 'start'}))
-            }
-            function handleMouseUp(e){
-                websocket.send(JSON.stringify({type: 'end'}))
-            }
-            function handleMouseMove(e){
-                if (e.which) {
-                    websocket.send(JSON.stringify({type: 'move', x: e.clientX - lastMouse.clientX, y: e.clientY - lastMouse.clientY, t: e.timeStamp - lastMouse.timeStamp}))
-                    lastMouse = e
-                }
-            }
-            function handleTouchStart(e) {
-                e.preventDefault()
-                if (websocket.readyState == 3)
-                    initWebSocket()
+        var xhr = new XMLHttpRequest();
+        xhr.open ("POST", "/data/userinfo", false);
+        xhr.send (JSON.stringify(o));
+        window.location.href = "controller.html"
+    }
 
-                if (!lastTouch) {
-                    websocket.send(JSON.stringify({type: 'start'}))
-                    var t = e.changedTouches[0]
-                    lastTouch = t.clone()
-                    lastTouch.timeStamp = e.timeStamp
-                }
-            }
-            function handleTouchMove(e) {
-                if (!lastTouch)
-                    return
-                for (var i = 0; i < e.changedTouches.length; i++) {
-                    var t = e.changedTouches[i]
-                    if (t.identifier == lastTouch.identifier) {
-                        websocket.send(JSON.stringify({type: 'move', x: t.pageX - lastTouch.pageX, y: t.pageY - lastTouch.pageY, t: e.timeStamp - lastTouch.timeStamp}))
-                        lastTouch = t.clone()
-                        lastTouch.timeStamp = e.timeStamp
-                    }
-                }
-            }
-            function handleTouchEnd(e) {
-                if (!lastTouch)
-                    return
-                for (var i = 0; i < e.changedTouches.length; i++)
-                    if (e.changedTouches[i].identifier == lastTouch.identifier) {
-                        websocket.send(JSON.stringify({type: 'end'}));
-                        lastTouch = null
-                    }
-            }
-
-            document.documentElement.addEventListener('mousedown', handleMouseDown)
-            document.documentElement.addEventListener('mouseup', handleMouseUp)
-            document.documentElement.addEventListener('mousemove', handleMouseMove)
-            document.documentElement.addEventListener('touchstart', handleTouchStart)
-            document.documentElement.addEventListener('touchmove', handleTouchMove)
-            document.documentElement.addEventListener('touchend', handleTouchEnd)
-            document.documentElement.addEventListener('touchend', handleTouchEnd)
-
-            // Fullscreen stuff
-            var fullscreenFn = Element.prototype.requestFullscreen
-                || Element.prototype.webkitRequestFullscreen
-                || Element.prototype.msRequestFullscreen
-                || Element.prototype.mozRequestFullScreen
-
-            function handleFullscreen(e) {
-                fullscreenFn.call(document.documentElement)
-                document.getElementById('fullscreenBtn').style.display = "none"
-            }
-            function handleFullscreenChange(e) {
-                if (!document.fullscreenElement
-                    && !document.webkitFullscreenElement
-                    && !document.mozFullscreenElement
-                    && !document.msFullscreenElement)
-                    document.getElementById('fullscreenBtn').style.display = null
-            }
-            document.addEventListener('fullscreenchange', handleFullscreenChange)
-            document.addEventListener('msfullscreenchange', handleFullscreenChange)
-            document.addEventListener('mozfullscreenchange', handleFullscreenChange)
-            document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
-            var fullscreenBtn = document.getElementById('fullscreenBtn')
-            if (fullscreenFn) {
-                var tap = new Tap(fullscreenBtn);
-                fullscreenBtn.addEventListener('tap', handleFullscreen);
-            } else
-                fullscreenBtn.style.display = "none"
-        </script>
-    </body>
+    document.getElementById('userInfoForm').addEventListener('submit', handleUserInfoFormSubmit)
+</script>
+</body>
 </html>

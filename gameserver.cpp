@@ -43,9 +43,11 @@
 #include "QtWebSockets/QWebSocket"
 #include <QtCore/QDebug>
 #include <QFile>
+#include <QUuid>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMimeDatabase>
+#include <QNetworkCookie>
 #include <QPoint>
 #include <QTcpSocket>
 
@@ -84,7 +86,7 @@ GameServerImpl::GameServerImpl(GameServer *pub, quint16 port)
 GameServerImpl::~GameServerImpl()
 {
     m_wsServer->close();
-    foreach (PlayerModel *player, m_socketPlayerMap)
+    for (PlayerModel *player : m_socketPlayerMap)
         player->deleteLater();
     QList<QWebSocket *> sockets = m_socketPlayerMap.keys();
     qDeleteAll(sockets.begin(), sockets.end());
@@ -98,35 +100,74 @@ void GameServerImpl::onNewConnection()
     connect(socket, &QWebSocket::disconnected, this, &GameServerImpl::socketDisconnected);
 
     auto player = new PlayerModel;
+    for (const QNetworkCookie &cookie : socket->cookies())
+        if (cookie.name() == "pid") {
+            QUuid playerId = QUuid::fromRfc4122(QByteArray::fromHex(cookie.value()));
+            player->name = m_playerInfoMap.value(playerId).value("playerName").toString();
+        }
+
     player->moveToThread(m_pub->thread());
     m_socketPlayerMap[socket] = player;
     emit m_pub->playerConnected(qVariantFromValue(player));
 }
 
-void GameServerImpl::handleNormalHttpRequest(const QNetworkRequest &request, QTcpSocket *connection)
+void GameServerImpl::handleNormalHttpRequest(const QByteArray &method, const QNetworkRequest &request, const QByteArray &body, QTcpSocket *connection)
 {
-    QString path = request.url().path();
-    Q_ASSERT(path.startsWith("/"));
-    if (path == "/")
-        path = QStringLiteral("/index.html");
+    // qWarning() << method << request.url();
+    if (method == "POST") {
+        QString path = request.url().path();
+        if (path == "/data/userinfo") {
+            auto jsonData = QJsonDocument::fromJson(body);
+            QUuid playerId;
+            QList<QNetworkCookie> cookies = request.header(QNetworkRequest::CookieHeader).value<QList<QNetworkCookie>>();
+            for (const QNetworkCookie &cookie : cookies)
+                if (cookie.name() == "pid")
+                    playerId = QUuid::fromRfc4122(QByteArray::fromHex(cookie.value()));
 
-    path.prepend("client");
-    // qWarning() << path << QMimeDatabase().mimeTypeForFile(path).name();
-    QFile file(path);
-    if (file.open(QFile::ReadOnly)) {
-        connection->write("HTTP/1.1 200 OK\r\n");
-        connection->write("Connection: close\r\n");
-        connection->write("Content-Type: " + QMimeDatabase().mimeTypeForFile(path).name().toLatin1() + "\r\n");
-        connection->write("Content-Length: " + QByteArray::number(file.size()) + "\r\n");
-        connection->write("\r\n");
-        while (!file.atEnd())
-            connection->write(file.read(2048));
-    } else {
-        connection->write("HTTP/1.1 404 Not Found\r\n");
-        connection->write("Connection: close\r\n");
-        connection->write("\r\n");
+            connection->write("HTTP/1.1 200 OK\r\n");
+            connection->write("Connection: close\r\n");
+            if (playerId.isNull()) {
+                playerId = QUuid::createUuid();
+                QNetworkCookie pidCookie("pid", playerId.toRfc4122().toHex());
+                pidCookie.setPath(QStringLiteral("/"));
+                connection->write("Set-Cookie: " + pidCookie.toRawForm() + "\r\n");
+            }
+            connection->write("\r\n");
+
+            setPlayerInfo(playerId, jsonData);
+        } else {
+            connection->write("HTTP/1.1 404 Not Found\r\n");
+            connection->write("Connection: close\r\n");
+            connection->write("\r\n");
+        }
+    } else if (method == "GET") {
+        QString path = request.url().path();
+        Q_ASSERT(path.startsWith("/"));
+        if (path == "/")
+            path = QStringLiteral("/index.html");
+
+        path.prepend("client");
+        QFile file(path);
+        if (file.open(QFile::ReadOnly)) {
+            connection->write("HTTP/1.1 200 OK\r\n");
+            connection->write("Connection: close\r\n");
+            connection->write("Content-Type: " + QMimeDatabase().mimeTypeForFile(path).name().toLatin1() + "\r\n");
+            connection->write("Content-Length: " + QByteArray::number(file.size()) + "\r\n");
+            connection->write("\r\n");
+            while (!file.atEnd())
+                connection->write(file.read(1024));
+        } else {
+            connection->write("HTTP/1.1 404 Not Found\r\n");
+            connection->write("Connection: close\r\n");
+            connection->write("\r\n");
+        }
     }
     connection->close();
+}
+
+void GameServerImpl::setPlayerInfo(const QUuid &playerId, const QJsonDocument &data)
+{
+    m_playerInfoMap[playerId] = data.object();
 }
 
 void GameServerImpl::processMessage(const QString &message)

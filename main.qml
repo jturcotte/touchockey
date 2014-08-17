@@ -20,6 +20,7 @@ World {
     Component {
         id: playerBodyComponent
         Body {
+            property var model
             function setup() {
                 x = 200
                 y = 200
@@ -40,8 +41,11 @@ World {
             }
             Rectangle {
                 anchors.fill: parent
-                color: "blue"
+                color: "#a0a0ff"
                 radius: width
+                Text {
+                    text: model ? model.name : ""
+                }
             }
         }
     }
@@ -111,7 +115,7 @@ World {
             function scored() { score++ }
             function addPlayer(model) {
                 print("CONNECTED! " + model)
-                var b = playerBodyComponent.createObject(world)
+                var b = playerBodyComponent.createObject(world, {model: model})
                 var c = playerControlComponent.createObject(world, {playerBody: b, model: model})
                 b.setup()
                 players.push(c)

@@ -52,17 +52,19 @@ QT_FORWARD_DECLARE_CLASS(QNetworkRequest)
 QT_FORWARD_DECLARE_CLASS(QWebSocketServer)
 QT_FORWARD_DECLARE_CLASS(QWebSocket)
 
-class PlayerModel : public QObject
-{
+class PlayerModel : public QObject {
     Q_OBJECT
+    Q_PROPERTY(QString name MEMBER name CONSTANT FINAL)
+public:
+    QString name;
+
 signals:
     void touchStart();
     void touchMove(const QVariant &x, const QVariant &y, const QVariant &time);
     void touchEnd();
 };
 
-class GameServer : public QThread
-{
+class GameServer : public QThread {
     Q_OBJECT
 public:
     GameServer(quint16 port, QObject *parent = nullptr);
@@ -79,8 +81,7 @@ private:
     quint16 m_port;
 };
 
-class GameServerImpl : public QObject
-{
+class GameServerImpl : public QObject {
     Q_OBJECT
 public:
     GameServerImpl(GameServer *pub, quint16 port);
@@ -90,12 +91,14 @@ private slots:
     void onNewConnection();
     void processMessage(const QString &message);
     void socketDisconnected();
-    void handleNormalHttpRequest(const QNetworkRequest &request, QTcpSocket *connection);
+    void handleNormalHttpRequest(const QByteArray &method, const QNetworkRequest &request, const QByteArray &body, QTcpSocket *connection);
 
 private:
+    void setPlayerInfo(const QUuid &playerId, const QJsonDocument &data);
     GameServer *m_pub;
     QWebSocketServer *m_wsServer;
     QHash<QWebSocket *, PlayerModel *> m_socketPlayerMap;
+    QHash<QUuid, QJsonObject> m_playerInfoMap;
 };
 
 QML_DECLARE_TYPE(PlayerModel)
