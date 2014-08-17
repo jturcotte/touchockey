@@ -81,6 +81,18 @@ private:
     quint16 m_port;
 };
 
+class PlayerInfoDb {
+public:
+    PlayerInfoDb();
+    QJsonObject playerInfo(const QByteArray &playerId) const;
+    void setPlayerInfo(const QByteArray &playerId, const QJsonObject &data);
+
+private:
+    void load();
+    void save() const;
+    QHash<QByteArray, QJsonObject> m_infoMap;
+};
+
 class GameServerImpl : public QObject {
     Q_OBJECT
 public:
@@ -94,11 +106,10 @@ private slots:
     void handleNormalHttpRequest(const QByteArray &method, const QNetworkRequest &request, const QByteArray &body, QTcpSocket *connection);
 
 private:
-    void setPlayerInfo(const QUuid &playerId, const QJsonDocument &data);
     GameServer *m_pub;
     QWebSocketServer *m_wsServer;
     QHash<QWebSocket *, PlayerModel *> m_socketPlayerMap;
-    QHash<QUuid, QJsonObject> m_playerInfoMap;
+    PlayerInfoDb m_playerInfoDb;
 };
 
 QML_DECLARE_TYPE(PlayerModel)

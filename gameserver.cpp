@@ -72,6 +72,43 @@ void GameServer::run()
     QThread::run();
 }
 
+PlayerInfoDb::PlayerInfoDb()
+{
+    load();
+}
+
+QJsonObject PlayerInfoDb::playerInfo(const QByteArray &playerId) const
+{
+    return m_infoMap.value(playerId);
+}
+
+void PlayerInfoDb::setPlayerInfo(const QByteArray &playerId, const QJsonObject &data)
+{
+    m_infoMap[playerId] = data;
+    save();
+}
+
+void PlayerInfoDb::load()
+{
+    QFile file("playerinfo.json");
+    if (file.open(QFile::ReadOnly)) {
+        const QJsonObject root = QJsonDocument::fromJson(file.readAll()).object();
+        for (auto i = root.begin(); i != root.end(); ++i)
+            m_infoMap[i.key().toLatin1()] = i.value().toObject();
+    }
+}
+
+void PlayerInfoDb::save() const
+{
+    QFile file("playerinfo.json");
+    if (file.open(QFile::WriteOnly)) {
+        QJsonObject root;
+        for (auto i = m_infoMap.begin(); i != m_infoMap.end(); ++i)
+            root[i.key()] = i.value();
+        file.write(QJsonDocument(root).toJson());
+    }
+}
+
 GameServerImpl::GameServerImpl(GameServer *pub, quint16 port)
     : m_pub(pub)
     , m_wsServer(new QWebSocketServer(QStringLiteral("Game Server"), QWebSocketServer::NonSecureMode, this))
@@ -102,8 +139,8 @@ void GameServerImpl::onNewConnection()
     auto player = new PlayerModel;
     for (const QNetworkCookie &cookie : socket->cookies())
         if (cookie.name() == "pid") {
-            QUuid playerId = QUuid::fromRfc4122(QByteArray::fromHex(cookie.value()));
-            player->name = m_playerInfoMap.value(playerId).value("playerName").toString();
+            QByteArray playerId = cookie.value();
+            player->name = m_playerInfoDb.playerInfo(playerId).value("playerName").toString();
         }
 
     player->moveToThread(m_pub->thread());
@@ -118,23 +155,23 @@ void GameServerImpl::handleNormalHttpRequest(const QByteArray &method, const QNe
         QString path = request.url().path();
         if (path == "/data/userinfo") {
             auto jsonDoc = QJsonDocument::fromJson(body);
-            QUuid playerId;
+            QByteArray playerId;
             QList<QNetworkCookie> cookies = request.header(QNetworkRequest::CookieHeader).value<QList<QNetworkCookie>>();
             for (const QNetworkCookie &cookie : cookies)
                 if (cookie.name() == "pid")
-                    playerId = QUuid::fromRfc4122(QByteArray::fromHex(cookie.value()));
+                    playerId = cookie.value();
 
             connection->write("HTTP/1.1 200 OK\r\n");
             connection->write("Connection: close\r\n");
             if (playerId.isNull()) {
-                playerId = QUuid::createUuid();
-                QNetworkCookie pidCookie("pid", playerId.toRfc4122().toHex());
+                playerId = QUuid::createUuid().toRfc4122().toHex();
+                QNetworkCookie pidCookie("pid", playerId);
                 pidCookie.setPath(QStringLiteral("/"));
                 connection->write("Set-Cookie: " + pidCookie.toRawForm() + "\r\n");
             }
             connection->write("\r\n");
 
-            setPlayerInfo(playerId, jsonDoc);
+            m_playerInfoDb.setPlayerInfo(playerId, jsonDoc.object());
         } else {
             connection->write("HTTP/1.1 404 Not Found\r\n");
             connection->write("Connection: close\r\n");
@@ -147,14 +184,12 @@ void GameServerImpl::handleNormalHttpRequest(const QByteArray &method, const QNe
             path = QStringLiteral("/index.html");
 
         if (path == "/data/userinfo") {
-            QUuid playerId;
+            QByteArray playerId;
             QList<QNetworkCookie> cookies = request.header(QNetworkRequest::CookieHeader).value<QList<QNetworkCookie>>();
             QJsonDocument jsonDoc;
             for (const QNetworkCookie &cookie : cookies)
-                if (cookie.name() == "pid") {
-                    playerId = QUuid::fromRfc4122(QByteArray::fromHex(cookie.value()));
-                    jsonDoc.setObject(m_playerInfoMap.value(playerId));
-                }
+                if (cookie.name() == "pid")
+                    jsonDoc.setObject(m_playerInfoDb.playerInfo(cookie.value()));
             QByteArray jsonData = jsonDoc.toJson(QJsonDocument::Compact);
             connection->write("HTTP/1.1 200 OK\r\n");
             connection->write("Connection: close\r\n");
@@ -181,11 +216,6 @@ void GameServerImpl::handleNormalHttpRequest(const QByteArray &method, const QNe
         }
     }
     connection->close();
-}
-
-void GameServerImpl::setPlayerInfo(const QUuid &playerId, const QJsonDocument &data)
-{
-    m_playerInfoMap[playerId] = data.object();
 }
 
 void GameServerImpl::processMessage(const QString &message)
