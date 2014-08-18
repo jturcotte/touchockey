@@ -39,24 +39,18 @@
 **
 ****************************************************************************/
 #include <QGuiApplication>
-#include <QQuickItem>
-#include <QQuickView>
-#include <QPoint>
-#include <QDebug>
+#include <QQmlApplicationEngine>
 #include "gameserver.h"
 
 int main(int argc, char *argv[])
 {
     QGuiApplication a(argc, argv);
     GameServer server(1234);
+    QQmlApplicationEngine engine("main.qml");
 
-    QQuickView view(QUrl::fromEncoded("main.qml"));
-    view.setResizeMode(QQuickView::SizeRootObjectToView);
-    view.setColor(Qt::darkBlue);
     // Use a blocking queued connection to make sure that we've initialized the QML Connection before emitting any message from the server thread.
-    QObject::connect(&server, SIGNAL(playerConnected(const QVariant &)), view.rootObject(), SLOT(onPlayerConnected(const QVariant &)), Qt::BlockingQueuedConnection);
-    QObject::connect(&server, SIGNAL(playerDisconnected(const QVariant &)), view.rootObject(), SLOT(onPlayerDisconnected(const QVariant &)));
+    QObject::connect(&server, SIGNAL(playerConnected(const QVariant &)), engine.rootObjects().first(), SLOT(onPlayerConnected(const QVariant &)), Qt::BlockingQueuedConnection);
+    QObject::connect(&server, SIGNAL(playerDisconnected(const QVariant &)), engine.rootObjects().first(), SLOT(onPlayerDisconnected(const QVariant &)));
 
-    view.show();
     return a.exec();
 }
