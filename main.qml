@@ -1,30 +1,39 @@
 import QtQuick 2.2
 import QtQuick.Window 2.2
+import QtGraphicalEffects 1.0
 import Box2D 1.1
 
 Window {
     function onPlayerConnected(model) {
-        leftTeam.addPlayer(model)
+        if (leftTeam.players.length)
+            rightTeam.addPlayer(model)
+        else
+            leftTeam.addPlayer(model)
     }
     function onPlayerDisconnected(model) {
         leftTeam.removePlayer(model)
     }
 
-    property real playerDiameter: 1 * world.pixelsPerMeter
+    function setupGame() {
+        puck.setup()
+        leftTeam.setup()
+        rightTeam.setup()
+    }
+
+    property real playerDiameter: 2 * world.pixelsPerMeter
     property real puckDiameter: 1/3 * world.pixelsPerMeter
     property real goalWidth: 4 * world.pixelsPerMeter
     property real rinkWidth: 20 * world.pixelsPerMeter
     property real rinkRatio: 1.5
 
-    property color rinkColor: "white"
-    property color puckColor: "red"
-    property color leftTeamColor: "#a0a0ff"
-    property color rightTeamColor: "#a0a0ff"
+    property color rinkColor: "#43439F"
+    property color puckColor: "#AF860B"
+    property color leftTeamColor: "#3A8100"
+    property color rightTeamColor: "#9D0A36"
 
     visible: true
     width: 1024
     height: 768
-    color: Qt.rgba(0.2, 0.2, 0.2)
 
     Component {
         id: teamComponent
@@ -67,6 +76,7 @@ Window {
         Component {
             id: playerBodyComponent
             Body {
+                id: body
                 property var model
                 property color playerColor
                 function setup() {
@@ -86,14 +96,18 @@ Window {
                     density: 1
                     friction: 0.4
                     restitution: 1
-                }
-                Rectangle {
-                    anchors.fill: parent
-                    color: playerColor
-                    border.color: "#D8D8D8"
-                    radius: width
-                    Text {
-                        text: model ? model.name : ""
+                    Rectangle {
+                        anchors.fill: parent
+                        color: playerColor
+                        radius: width
+                        Image {
+                            anchors.fill: parent
+                            source: "globe.svg"
+                            rotation: -body.rotation
+                        }
+                        Text {
+                            text: model ? model.name : ""
+                        }
                     }
                 }
             }
@@ -143,11 +157,6 @@ Window {
                     restitution: 1
                     categories: Fixture.None
                 }
-                // Rectangle {
-                //     anchors.fill: parent
-                //     color: "blue"
-                //     opacity: 0.4
-                // }
                 FrictionJoint {
                     id: friction
                     bodyA: _touching ? playerBody : null
@@ -162,30 +171,26 @@ Window {
         height: 768
         gravity: Qt.point(0, 0)
 
-        Text {
-            color: "red"
-            text: "Score: " + leftTeam.score
-            font.pointSize: 24
-            anchors { left: parent.left; top: parent.top }
-        }
-        Text {
-            color: "blue"
-            text: "Score: " + rightTeam.score
-            font.pointSize: 24
-            anchors { right: parent.right; top: parent.top }
+        Rectangle {
+            id: background
+            anchors.fill: parent
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: "gray" }
+                GradientStop { position: 0.33; color: "dimgray" }
+                GradientStop { position: 1.0; color: "black" }
+            }
         }
 
-        Rectangle {
-            id: rink
-            color: rinkColor
-            width: rinkWidth
-            height: rinkWidth / rinkRatio
-            anchors.centerIn: parent
+        RectangularGlow {
+            anchors.fill: rink
+            glowRadius: 25
+            cornerRadius: rink.radius
         }
+
         Body {
             id: leftGoal
             anchors { right: rink.left; verticalCenter: rink.verticalCenter}
-            width: 100
+            width: 50
             height: goalWidth
             fixtures: Box {
                 anchors.fill: parent; friction: 1.0
@@ -195,16 +200,18 @@ Window {
                     leftTeam.scored()
                     setupGame()
                 }
-                Rectangle {
+                RectangularGlow {
                     anchors.fill: parent
-                    color: "grey"
+                    glowRadius: 10
+                    cornerRadius: 0
+                    color: "slategray"
                 }
             }
         }
         Body {
             id: rightGoal
             anchors { left: rink.right; verticalCenter: rink.verticalCenter}
-            width: 100
+            width: 50
             height: goalWidth
             fixtures: Box {
                 anchors.fill: parent; friction: 1.0
@@ -214,10 +221,24 @@ Window {
                     rightTeam.scored()
                     setupGame()
                 }
-                Rectangle {
+                RectangularGlow {
                     anchors.fill: parent
-                    color: "grey"
+                    glowRadius: 10
+                    cornerRadius: 0
+                    color: "slategray"
                 }
+            }
+        }
+
+        Rectangle {
+            id: rink
+            width: rinkWidth
+            height: rinkWidth / rinkRatio
+            anchors.centerIn: parent
+            radius: 10
+            gradient: Gradient {
+                GradientStop { position: 0; color: rinkColor }
+                GradientStop { position: 1; color: Qt.darker(rinkColor) }
             }
         }
         Body {
@@ -284,6 +305,11 @@ Window {
                     anchors.fill: parent
                     color: puckColor
                     radius: width
+                    Image {
+                        anchors.fill: parent
+                        source: "globe.svg"
+                        rotation: -puck.rotation
+                    }
                 }
             }
         }
@@ -294,9 +320,17 @@ Window {
         //     world: world
         // }
     }
-    function setupGame() {
-        puck.setup()
-        leftTeam.setup()
-        rightTeam.setup()
+
+    Text {
+        color: "red"
+        text: "Score: " + leftTeam.score
+        font.pointSize: 24
+        anchors { left: parent.left; top: parent.top }
+    }
+    Text {
+        color: "blue"
+        text: "Score: " + rightTeam.score
+        font.pointSize: 24
+        anchors { right: parent.right; top: parent.top }
     }
 }
