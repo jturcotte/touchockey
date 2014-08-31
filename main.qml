@@ -1,5 +1,6 @@
 import QtQuick 2.2
 import QtQuick.Window 2.2
+import QtQuick.Particles 2.0
 import QtGraphicalEffects 1.0
 import Box2D 1.1
 
@@ -43,15 +44,13 @@ Window {
             function addPlayer(model) {
                 print("CONNECTED! " + model)
                 var b = playerBodyComponent.createObject(world, {model: model, playerColor: teamColor})
-                var c = playerControlComponent.createObject(world, {playerBody: b, model: model})
                 b.setup()
-                players.push(c)
+                players.push(b)
             }
             function removePlayer(model) {
                 print("DISCONNECTED! " + model)
                 for (var i = 0; i < players.length; i++)
                     if (players[i].model === model) {
-                        players[i].playerBody.destroy()
                         players[i].destroy()
                         players.splice(i, 1)
                         return
@@ -59,7 +58,7 @@ Window {
             }
             function setup() {
                 for (var i = 0; i < players.length; i++) {
-                    players[i].playerBody.setup()
+                    players[i].setup()
                 }
             }
             property int score: 0
@@ -79,10 +78,12 @@ Window {
                 id: body
                 property var model
                 property color playerColor
+
                 function setup() {
                     x = 200
                     y = 200
                 }
+
                 width: playerDiameter
                 height: playerDiameter
                 linearDamping: 5.0
@@ -109,60 +110,34 @@ Window {
                             text: model ? model.name : ""
                         }
                     }
-                }
-            }
-        }
-        Component {
-            id: playerControlComponent
-            Body {
-                id: controlBody
-                property Item playerBody
-                property var model
-                property bool _touching: false
+                    Emitter {
+                        id: fireEmitter
+                        system: flamePainter.system
+                        width: 25
+                        height: 25
+                        anchors.centerIn: parent
+                        enabled: false
 
-                Connections {
-                    target: world
-                    onStepped: {
-                        // if (controlBody.linearVelocity.x)
-                        //     console.log(friction.getReactionForce(1/world.timeStep))
-                        controlBody.linearVelocity = Qt.point(0, 0)
+                        lifeSpan: 160
+
+                        velocity: PointDirection { xVariation: width * 2; yVariation: height * 2 }
+
+                        size: 24
+                        sizeVariation: size
                     }
                 }
                 Connections {
                     target: model
-                    onTouchStart: {
-                        controlBody.x = playerBody.x
-                        controlBody.y = playerBody.y
-                        _touching = true
-                    }
-                    onTouchEnd: {
-                        _touching = false
-                    }
                     onTouchMove: {
-                        // print(x + " " + y + " : " + time)
-                        var ratio = world.pixelsPerMeter * world.timeStep
-                        controlBody.linearVelocity = Qt.point(controlBody.linearVelocity.x + x / ratio, controlBody.linearVelocity.y + y / ratio)
+                        // FIXME: Find a meaning for that number
+                        var ratio = world.pixelsPerMeter * 0.0005
+                        body.applyForceToCenter(Qt.point(x / ratio, y / ratio))
+                        var v = Qt.vector2d(x, y)
+                        var fireVel = v.normalized().times(-200)
+                        fireEmitter.velocity.x = fireVel.x
+                        fireEmitter.velocity.y = fireVel.y
+                        fireEmitter.burst(v.length())
                     }
-                }
-
-                width: 200
-                height: 200
-                sleepingAllowed: true
-                fixedRotation: true
-                bodyType: Body.Kinematic
-                fixtures: Box {
-                    anchors.fill: parent
-                    density: 1
-                    friction: 0.4
-                    restitution: 1
-                    categories: Fixture.None
-                }
-                FrictionJoint {
-                    id: friction
-                    bodyA: _touching ? playerBody : null
-                    bodyB: controlBody
-                    maxForce: 50000
-                    maxTorque: 5
                 }
             }
         }
@@ -319,6 +294,15 @@ Window {
         //     anchors.fill: parent
         //     world: world
         // }
+
+        ImageParticle {
+            id: flamePainter
+            anchors.fill: parent
+            system: ParticleSystem { }
+            source: "qrc:///particleresources/glowdot.png"
+            colorVariation: 0.1
+            color: "#00ff400f"
+        }
     }
 
     Text {
