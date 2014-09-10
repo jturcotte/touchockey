@@ -40,15 +40,18 @@
 ****************************************************************************/
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QtQml/qtqmlglobal.h>
 #include "gameserver.h"
+#include "lightedimageitem.h"
 
 int main(int argc, char *argv[])
 {
+    qmlRegisterType<LightedImageItem>("main", 1, 0, "LightedImage");
     QGuiApplication a(argc, argv);
-    GameServer server(1234);
     QQmlApplicationEngine engine("main.qml");
 
     // Use a blocking queued connection to make sure that we've initialized the QML Connection before emitting any message from the server thread.
+    GameServer server(1234);
     QObject::connect(&server, SIGNAL(playerConnected(const QVariant &)), engine.rootObjects().first(), SLOT(onPlayerConnected(const QVariant &)), Qt::BlockingQueuedConnection);
     QObject::connect(&server, SIGNAL(playerDisconnected(const QVariant &)), engine.rootObjects().first(), SLOT(onPlayerDisconnected(const QVariant &)));
 

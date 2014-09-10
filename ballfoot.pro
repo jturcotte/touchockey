@@ -7,9 +7,11 @@ TEMPLATE = app
 
 SOURCES += \
     main.cpp \
-    gameserver.cpp
+    gameserver.cpp \
+    lightedimageitem.cpp
 
 HEADERS += \
-    gameserver.h
+    gameserver.h \
+    lightedimageitem.h
 
 OTHER_FILES += *.html

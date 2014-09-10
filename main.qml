@@ -1,3 +1,4 @@
+import main 1.0
 import QtQuick 2.2
 import QtQuick.Window 2.2
 import QtQuick.Particles 2.0
@@ -5,6 +6,7 @@ import QtGraphicalEffects 1.0
 import Box2D 1.1
 
 Window {
+    id: root
     function onPlayerConnected(model) {
         if (leftTeam.players.length)
             rightTeam.addPlayer(model)
@@ -26,6 +28,7 @@ Window {
     property real goalWidth: 4 * world.pixelsPerMeter
     property real rinkWidth: 20 * world.pixelsPerMeter
     property real rinkRatio: 1.5
+    property list<Item> lightSources
 
     property color rinkColor: "#43439F"
     property color puckColor: "#AF860B"
@@ -78,6 +81,7 @@ Window {
                 id: body
                 property var model
                 property color playerColor
+                property real lightWidth: 50;
 
                 function setup() {
                     x = 200
@@ -97,15 +101,12 @@ Window {
                     density: 1
                     friction: 0.4
                     restitution: 1
-                    Rectangle {
+                    LightedImage {
+                        id: blah
                         anchors.fill: parent
-                        color: playerColor
-                        radius: width
-                        Image {
-                            anchors.fill: parent
-                            source: "globe.svg"
-                            rotation: -body.rotation
-                        }
+                        sourceImage: "saucer_red.png"
+                        normalsImage: "saucer_normals.png"
+                        lightSources: root.lightSources
                         Text {
                             text: model ? model.name : ""
                         }
@@ -131,13 +132,37 @@ Window {
                     onTouchMove: {
                         // FIXME: Find a meaning for that number
                         var ratio = world.pixelsPerMeter * 0.0005
+                        // FIXME: Check if we get more than one move event per step.
                         body.applyForceToCenter(Qt.point(x / ratio, y / ratio))
                         var v = Qt.vector2d(x, y)
                         var fireVel = v.normalized().times(-200)
                         fireEmitter.velocity.x = fireVel.x
                         fireEmitter.velocity.y = fireVel.y
                         fireEmitter.burst(v.length())
+                        if (body.lightWidth < root.width / 3)
+                            body.lightWidth += v.length() * 5
                     }
+                }
+                Component.onCompleted: {
+                    var jsArray = [body]
+                    for (var i in root.lightSources)
+                        jsArray.push(root.lightSources[i])
+                    root.lightSources = jsArray
+                }
+                Component.onDestruction: {
+                    var jsArray = []
+                    for (var i in root.lightSources) {
+                        var o = root.lightSources[i]
+                        if (o != body)
+                            jsArray.push(o)
+                    }
+                    root.lightSources = jsArray
+                }
+                Timer {
+                    interval: 16
+                    running: true
+                    repeat: true
+                    onTriggered: if (body.lightWidth > 0) body.lightWidth -= 50
                 }
             }
         }
@@ -159,7 +184,7 @@ Window {
         RectangularGlow {
             anchors.fill: rink
             glowRadius: 25
-            cornerRadius: rink.radius
+            color: "black"
         }
 
         Body {
@@ -205,16 +230,16 @@ Window {
             }
         }
 
-        Rectangle {
+        LightedImage {
             id: rink
             width: rinkWidth
             height: rinkWidth / rinkRatio
             anchors.centerIn: parent
-            radius: 10
-            gradient: Gradient {
-                GradientStop { position: 0; color: rinkColor }
-                GradientStop { position: 1; color: Qt.darker(rinkColor) }
-            }
+            sourceImage: "ft_broken01_c.png"
+            normalsImage: "ft_broken01_n.png"
+            hRepeat: 2
+            vRepeat: hRepeat / width * height
+            lightSources: root.lightSources
         }
         Body {
             id: topLeftWall
