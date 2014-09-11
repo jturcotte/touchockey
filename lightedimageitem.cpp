@@ -107,9 +107,11 @@ QSGNode *LightedImageItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     }
 
     auto material = static_cast<QSGSimpleMaterial<LightedImageMaterialState>*>(node->material());
-    int i = 0;
+    unsigned i = 0;
     material->state()->lightVec = { };
     for (auto &item : m_lightSourceItems) {
+        if (i >= material->state()->lightVec.size())
+            break;
         if (item->property("lightWidth").toFloat() <= 0)
             continue;
         material->state()->lightVec[i] = QVector3D(mapFromItem(item, item->boundingRect().center()));
