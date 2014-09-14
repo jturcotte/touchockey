@@ -6,6 +6,8 @@
 #include <QSGTexture>
 #include <array>
 
+#include <memory>
+
 struct LightedImageMaterialState
 {
     std::unique_ptr<QSGTexture> sourceImage;
