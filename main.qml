@@ -8,10 +8,9 @@ import Box2D 1.1
 Window {
     id: root
     function onPlayerConnected(model) {
-        if (leftTeam.players.length)
-            rightTeam.addPlayer(model)
-        else
-            leftTeam.addPlayer(model)
+        var team = leftTeam.numPlayers > rightTeam.numPlayers ? rightTeam : leftTeam
+        team.addPlayer(model)
+        team.setup()
     }
     function onPlayerDisconnected(model) {
         leftTeam.removePlayer(model)
@@ -43,13 +42,15 @@ Window {
     Component {
         id: teamComponent
         QtObject {
+            id: team
             property string teamImage
             property int numPlayers
             function scored() { score++ }
             function addPlayer(model) {
                 print("CONNECTED! " + model)
                 var b = playerBodyComponent.createObject(world, {model: model, playerImage: teamImage})
-                b.setup()
+                b.x = rink.x + 100
+                b.y = rink.y + 100
                 players.push(b)
                 numPlayers = players.length
             }
@@ -64,8 +65,21 @@ Window {
                 numPlayers = players.length
             }
             function setup() {
-                for (var i = 0; i < players.length; i++) {
-                    players[i].setup()
+                function adjXLeft(x) { return rink.x + x }
+                function adjXRight(x) { return rink.x + rink.width - x }
+                function adjY(y) { return rink.y + y }
+                var adjX = team == leftTeam ? adjXLeft : adjXRight
+                var numCols = Math.round(Math.sqrt(players.length))
+                var numRows = Math.ceil(players.length / numCols)
+                var colDist = rink.width / 2 / (numCols + 1)
+                var rowDist = rink.height / (numRows + 1)
+                var playerI = 0
+                for (var i = 1; i <= numCols && playerI < players.length; ++i) {
+                    for (var j = 1; j <= numRows && playerI < players.length; ++j, ++playerI) {
+                        players[playerI].rotation = 0
+                        players[playerI].x = adjX(i * colDist) - players[playerI].width / 2
+                        players[playerI].y = adjY(j * rowDist) - players[playerI].height / 2
+                    }
                 }
             }
             property int score: 0
@@ -97,11 +111,6 @@ Window {
                 property var model
                 property string playerImage
                 property real lightWidth: 50;
-
-                function setup() {
-                    x = 200
-                    y = 200
-                }
 
                 width: playerDiameterMeters * world.pixelsPerMeter
                 height: playerDiameterMeters * world.pixelsPerMeter
@@ -288,8 +297,9 @@ Window {
             property int collitionCategory: Fixture.Category10
 
             function setup() {
-                x = world.width / 2
-                y = world.height / 2
+                rotation = 0
+                x = world.width / 2 - width / 2
+                y = world.height / 2 - height / 2
                 linearVelocity = Qt.point(0, 0)
                 angularVelocity = 0
             }
