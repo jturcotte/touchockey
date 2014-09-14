@@ -38,6 +38,7 @@ Window {
     visible: true
     width: 1024
     height: 768
+    flags: Qt.Window | Qt.WindowFullscreenButtonHint
 
     Component {
         id: teamComponent
