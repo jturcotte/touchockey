@@ -23,11 +23,11 @@ Window {
         rightTeam.setup()
     }
 
-    property real playerDiameter: 2 * world.pixelsPerMeter
-    property real puckDiameter: 1/3 * world.pixelsPerMeter
-    property real goalWidth: 4 * world.pixelsPerMeter
-    property real rinkWidth: 20 * world.pixelsPerMeter
+    property real playerDiameterMeters: 2
+    property real puckDiameterMeters: 1
+    property real rinkWidthMeters: Math.max(20, 20 + leftTeam.numPlayers * 5)
     property real rinkRatio: 1.5
+    property real goalWidthMeters: rinkWidthMeters / rinkRatio / 4
     property list<Item> lightSources
 
     property color rinkColor: "#43439F"
@@ -44,12 +44,14 @@ Window {
         id: teamComponent
         QtObject {
             property string teamImage
+            property int numPlayers
             function scored() { score++ }
             function addPlayer(model) {
                 print("CONNECTED! " + model)
                 var b = playerBodyComponent.createObject(world, {model: model, playerImage: teamImage})
                 b.setup()
                 players.push(b)
+                numPlayers = players.length
             }
             function removePlayer(model) {
                 print("DISCONNECTED! " + model)
@@ -59,6 +61,7 @@ Window {
                         players.splice(i, 1)
                         return
                     }
+                numPlayers = players.length
             }
             function setup() {
                 for (var i = 0; i < players.length; i++) {
@@ -71,10 +74,21 @@ Window {
     }
     property QtObject leftTeam: teamComponent.createObject(this, {teamImage: leftTeamImage})
     property QtObject rightTeam: teamComponent.createObject(this, {teamImage: rightTeamImage})
+
+    Rectangle {
+        id: background
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "gray" }
+            GradientStop { position: 0.33; color: "dimgray" }
+            GradientStop { position: 1.0; color: "black" }
+        }
+    }
+
     World {
         id: world
         anchors.fill: parent
-        pixelsPerMeter: 32
+        pixelsPerMeter: root.width * 0.8 / rinkWidthMeters
 
         Component {
             id: playerBodyComponent
@@ -89,8 +103,8 @@ Window {
                     y = 200
                 }
 
-                width: playerDiameter
-                height: playerDiameter
+                width: playerDiameterMeters * world.pixelsPerMeter
+                height: playerDiameterMeters * world.pixelsPerMeter
                 linearDamping: 5.0
                 angularDamping: 5.0
                 sleepingAllowed: true
@@ -172,16 +186,6 @@ Window {
         height: 768
         gravity: Qt.point(0, 0)
 
-        Rectangle {
-            id: background
-            anchors.fill: parent
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: "gray" }
-                GradientStop { position: 0.33; color: "dimgray" }
-                GradientStop { position: 1.0; color: "black" }
-            }
-        }
-
         RectangularGlow {
             anchors.fill: rink
             glowRadius: 25
@@ -192,7 +196,7 @@ Window {
             id: leftGoal
             anchors { right: rink.left; verticalCenter: rink.verticalCenter}
             width: 50
-            height: goalWidth
+            height: goalWidthMeters * world.pixelsPerMeter
             fixtures: Box {
                 anchors.fill: parent; friction: 1.0
                 sensor: true
@@ -213,7 +217,7 @@ Window {
             id: rightGoal
             anchors { left: rink.right; verticalCenter: rink.verticalCenter}
             width: 50
-            height: goalWidth
+            height: goalWidthMeters * world.pixelsPerMeter
             fixtures: Box {
                 anchors.fill: parent; friction: 1.0
                 sensor: true
@@ -233,8 +237,8 @@ Window {
 
         LightedImage {
             id: rink
-            width: rinkWidth
-            height: rinkWidth / rinkRatio
+            width: rinkWidthMeters * world.pixelsPerMeter
+            height: rinkWidthMeters * world.pixelsPerMeter / rinkRatio
             anchors.centerIn: parent
             sourceImage: "ft_broken01_c.png"
             normalsImage: "ft_broken01_n.png"
@@ -289,8 +293,8 @@ Window {
                 linearVelocity = Qt.point(0, 0)
                 angularVelocity = 0
             }
-            width: puckDiameter
-            height: puckDiameter
+            width: puckDiameterMeters * world.pixelsPerMeter
+            height: puckDiameterMeters * world.pixelsPerMeter
             linearDamping: 3.0
             angularDamping: 3.0
             sleepingAllowed: true
