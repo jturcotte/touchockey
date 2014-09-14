@@ -28,6 +28,7 @@ Window {
     property real rinkRatio: 1.5
     property real goalWidthMeters: rinkWidthMeters / rinkRatio / 4
     property list<Item> lightSources
+    signal someLightMoved()
 
     property color rinkColor: "#43439F"
     property color puckColor: "#AF860B"
@@ -126,11 +127,12 @@ Window {
                     friction: 0.4
                     restitution: 1
                     LightedImage {
-                        id: blah
+                        id: image
                         anchors.fill: parent
                         sourceImage: playerImage
                         normalsImage: "saucer_normals.png"
                         lightSources: root.lightSources
+                        Connections { target: root; onSomeLightMoved: image.update() }
                         Text {
                             text: model ? model.name : ""
                         }
@@ -172,6 +174,8 @@ Window {
                     for (var i in root.lightSources)
                         jsArray.push(root.lightSources[i])
                     root.lightSources = jsArray
+                    body.xChanged.connect(root.someLightMoved)
+                    body.yChanged.connect(root.someLightMoved)
                 }
                 Component.onDestruction: {
                     var jsArray = []
@@ -254,6 +258,7 @@ Window {
             hRepeat: 2
             vRepeat: hRepeat / width * height
             lightSources: root.lightSources
+            Connections { target: root; onSomeLightMoved: rink.update() }
         }
         Body {
             id: topLeftWall

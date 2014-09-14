@@ -16,11 +16,7 @@ public:
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
     QQmlListProperty<QQuickItem> lightSourceItems() {
-        return QQmlListProperty<QQuickItem>(this , &m_lightSourceItems
-            , lightSourceAppend
-            , lightSourceCount
-            , lightSourceAt
-            , lightSourceClear);
+        return QQmlListProperty<QQuickItem>(this, m_lightSourceItems);
     }
 
     QString sourceImage() const { return m_sourceImage; }
@@ -63,24 +59,6 @@ signals:
     void vRepeatChanged();
 
 private:
-    static void lightSourceAppend(QQmlListProperty<QQuickItem> *p, QQuickItem *v) {
-        QObject::connect(v, SIGNAL(xChanged()), p->object, SLOT(update()));
-        QObject::connect(v, SIGNAL(yChanged()), p->object, SLOT(update()));
-        reinterpret_cast<QList<QQuickItem *> *>(p->data)->append(v);
-    }
-    static int lightSourceCount(QQmlListProperty<QQuickItem> *p) {
-        return reinterpret_cast<QList<QQuickItem *> *>(p->data)->count();
-    }
-    static QQuickItem *lightSourceAt(QQmlListProperty<QQuickItem> *p, int idx) {
-        return reinterpret_cast<QList<QQuickItem *> *>(p->data)->at(idx);
-    }
-    static void lightSourceClear(QQmlListProperty<QQuickItem> *p) {
-        auto list = reinterpret_cast<QList<QQuickItem *> *>(p->data);
-        for (auto i : *list)
-            i->disconnect(p->object);
-        return list->clear();
-    }
-
     QList<QQuickItem *> m_lightSourceItems;
     QString m_sourceImage;
     QString m_normalsImage;
