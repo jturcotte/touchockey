@@ -291,6 +291,19 @@ Window {
             height: 50
             fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
         }
+        Body {
+            id: leftGoalLeftWall
+            anchors { right: leftGoal.left; top: leftGoal.top; bottom: leftGoal.bottom;}
+            width: 50
+            fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
+        }
+        Body {
+            id: rightGoalRightWall
+            anchors { left: rightGoal.right; top: rightGoal.top; bottom: rightGoal.bottom;}
+            width: 50
+            fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
+        }
+
 
         Body {
             id: puck
