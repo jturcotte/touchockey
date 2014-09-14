@@ -211,7 +211,7 @@ Window {
                 sensor: true
                 collidesWith: puck.collitionCategory
                 onBeginContact: {
-                    leftTeam.scored()
+                    rightTeam.scored()
                     setupGame()
                 }
                 RectangularGlow {
@@ -232,7 +232,7 @@ Window {
                 sensor: true
                 collidesWith: puck.collitionCategory
                 onBeginContact: {
-                    rightTeam.scored()
+                    leftTeam.scored()
                     setupGame()
                 }
                 RectangularGlow {
