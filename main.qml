@@ -312,7 +312,7 @@ Window {
             fixtures: Circle {
                 anchors.fill: parent
                 radius: width / 2
-                density: 1
+                density: 0.5
                 friction: 0.4
                 restitution: 1
                 categories: puck.collitionCategory
