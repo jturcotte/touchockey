@@ -32,8 +32,8 @@ Window {
 
     property color rinkColor: "#43439F"
     property color puckColor: "#AF860B"
-    property color leftTeamColor: "#3A8100"
-    property color rightTeamColor: "#9D0A36"
+    property string leftTeamImage: "saucer_red.png"
+    property string rightTeamImage: "saucer_blue.png"
 
     visible: true
     width: 1024
@@ -42,11 +42,11 @@ Window {
     Component {
         id: teamComponent
         QtObject {
-            property color teamColor
+            property string teamImage
             function scored() { score++ }
             function addPlayer(model) {
                 print("CONNECTED! " + model)
-                var b = playerBodyComponent.createObject(world, {model: model, playerColor: teamColor})
+                var b = playerBodyComponent.createObject(world, {model: model, playerImage: teamImage})
                 b.setup()
                 players.push(b)
             }
@@ -68,8 +68,8 @@ Window {
             property var players: []
         }
     }
-    property QtObject leftTeam: teamComponent.createObject(this, {teamColor: leftTeamColor})
-    property QtObject rightTeam: teamComponent.createObject(this, {teamColor: rightTeamColor})
+    property QtObject leftTeam: teamComponent.createObject(this, {teamImage: leftTeamImage})
+    property QtObject rightTeam: teamComponent.createObject(this, {teamImage: rightTeamImage})
     World {
         id: world
         anchors.fill: parent
@@ -80,7 +80,7 @@ Window {
             Body {
                 id: body
                 property var model
-                property color playerColor
+                property string playerImage
                 property real lightWidth: 50;
 
                 function setup() {
@@ -104,7 +104,7 @@ Window {
                     LightedImage {
                         id: blah
                         anchors.fill: parent
-                        sourceImage: "saucer_red.png"
+                        sourceImage: playerImage
                         normalsImage: "saucer_normals.png"
                         lightSources: root.lightSources
                         Text {
