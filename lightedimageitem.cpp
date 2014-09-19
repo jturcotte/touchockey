@@ -5,19 +5,53 @@
 #include <QSGSimpleMaterial>
 #include <QSGTexture>
 #include <array>
-
 #include <memory>
+#include <unordered_map>
+
+namespace std {
+template <>
+struct hash<QString> {
+    size_t operator()(const QString &x) const {
+        return qHash(x);
+    }
+};
+}
 
 struct LightedImageMaterialState
 {
-    std::unique_ptr<QSGTexture> sourceImage;
-    std::unique_ptr<QSGTexture> normalsImage;
+    std::shared_ptr<QSGTexture> sourceImage;
+    std::shared_ptr<QSGTexture> normalsImage;
     std::array<QVector3D, 10> lightVec;
+
+    int compare(const LightedImageMaterialState *o) const {
+	// FIXME: This assumes that lightVec is the same for all instances.
+        int d = sourceImage.get() - o->sourceImage.get();
+        if (d)
+            return d;
+        else if ((d = normalsImage.get() - o->normalsImage.get()) != 0)
+            return d;
+        else
+            return 0;
+    }
 };
+
+static std::shared_ptr<QSGTexture> createAndCacheTexture(QQuickWindow *window, const QString &path)
+{
+    static std::unordered_map<QString, std::weak_ptr<QSGTexture>> cachedTexturesMap;
+    std::weak_ptr<QSGTexture> &cachedTexture = cachedTexturesMap[path];
+    std::shared_ptr<QSGTexture> texture = cachedTexture.lock();
+    if (!texture) {
+        texture.reset(window->createTextureFromImage(QImage{ path }));
+        texture->setHorizontalWrapMode(QSGTexture::Repeat);
+        texture->setVerticalWrapMode(QSGTexture::Repeat);
+        cachedTexture = texture;
+    }
+    return texture;
+}
 
 class LightedImageMaterialShader : public QSGSimpleMaterialShader<LightedImageMaterialState>
 {
-    QSG_DECLARE_SIMPLE_SHADER(LightedImageMaterialShader, LightedImageMaterialState)
+    QSG_DECLARE_SIMPLE_COMPARABLE_SHADER(LightedImageMaterialShader, LightedImageMaterialState)
 public:
 
     const char *vertexShader() const {
@@ -36,11 +70,12 @@ public:
 
     const char *fragmentShader() const {
         return QT_STRINGIFY(
+            const int numberOfLights = 5;
             varying highp vec2 qt_TexCoord0;
             uniform highp float qt_Opacity;
             uniform sampler2D sourceImage;
             uniform sampler2D normalsImage;
-            uniform highp vec3 lightVec[10];
+            uniform highp vec3 lightVec[numberOfLights];
 
             void main(void)
             {
@@ -50,11 +85,10 @@ public:
                 highp vec3 normal = vec3(pix2.rg * 2.0 - 1.0, pix2.b);
                 highp float diffuse = 0.66;
 
-                for(int i = 0; i <= 10; ++i) {
-                    highp float factor = step(0.01, lightVec[i].z);
+                for(int i = 0; i < numberOfLights; i++) {
                     highp vec3 relVec = lightVec[i];
                     relVec.xy -= pixPos;
-                    diffuse = min(1.0, max(diffuse, factor * dot(normal, normalize(relVec))));
+                    diffuse = min(1.0, max(diffuse, step(0.01, relVec.z) * dot(normal, normalize(relVec))));
                 }
 
                 highp vec4 color = vec4(diffuse * pix.rgb, pix.a);
@@ -95,14 +129,11 @@ QSGNode *LightedImageItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     if (!node) {
         node = new QSGGeometryNode;
         auto material = LightedImageMaterialShader::createMaterial();
-        material->setFlag(QSGMaterial::Blending);
         // FIXME: Check for changed and move lower.
-        material->state()->sourceImage.reset(window()->createTextureFromImage(QImage{ m_sourceImage }));
-        material->state()->sourceImage->setHorizontalWrapMode(QSGTexture::Repeat);
-        material->state()->sourceImage->setVerticalWrapMode(QSGTexture::Repeat);
-        material->state()->normalsImage.reset(window()->createTextureFromImage(QImage{ m_normalsImage }));
-        material->state()->normalsImage->setHorizontalWrapMode(QSGTexture::Repeat);
-        material->state()->normalsImage->setVerticalWrapMode(QSGTexture::Repeat);
+        material->state()->sourceImage = createAndCacheTexture(window(), m_sourceImage);
+        material->state()->normalsImage = createAndCacheTexture(window(), m_normalsImage);
+        if (material->state()->sourceImage->hasAlphaChannel())
+            material->setFlag(QSGMaterial::Blending);
         node->setFlags(QSGNode::OwnsMaterial | QSGNode::OwnsGeometry);
         node->setMaterial(material);
         node->setGeometry(new QSGGeometry{ QSGGeometry::defaultAttributes_TexturedPoint2D(), 4 });
