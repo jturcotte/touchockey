@@ -36,8 +36,8 @@ Window {
     property string rightTeamImage: "saucer_blue.png"
 
     visible: true
-    width: 1024
-    height: 768
+    width: 1920
+    height: 1080
     flags: Qt.Window | Qt.WindowFullscreenButtonHint
 
     Component {
