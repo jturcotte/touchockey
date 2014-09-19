@@ -27,8 +27,7 @@ Window {
     property real rinkWidthMeters: Math.max(20, 20 + leftTeam.numPlayers * 5)
     property real rinkRatio: 1.5
     property real goalWidthMeters: rinkWidthMeters / rinkRatio / 4
-    property list<Item> lightSources
-    signal someLightMoved()
+    LightGroup { id: lights }
 
     property color rinkColor: "#43439F"
     property color puckColor: "#AF860B"
@@ -131,8 +130,7 @@ Window {
                         anchors.fill: parent
                         sourceImage: playerImage
                         normalsImage: "saucer_normals.png"
-                        lightSources: root.lightSources
-                        Connections { target: root; onSomeLightMoved: image.update() }
+                        lightSources: lights
                         Text {
                             text: model ? model.name : ""
                         }
@@ -171,20 +169,18 @@ Window {
                 }
                 Component.onCompleted: {
                     var jsArray = [body]
-                    for (var i in root.lightSources)
-                        jsArray.push(root.lightSources[i])
-                    root.lightSources = jsArray
-                    body.xChanged.connect(root.someLightMoved)
-                    body.yChanged.connect(root.someLightMoved)
+                    for (var i in lights.sources)
+                        jsArray.push(lights.sources[i])
+                    lights.sources = jsArray
                 }
                 Component.onDestruction: {
                     var jsArray = []
-                    for (var i in root.lightSources) {
-                        var o = root.lightSources[i]
+                    for (var i in lights.sources) {
+                        var o = lights.sources[i]
                         if (o != body)
                             jsArray.push(o)
                     }
-                    root.lightSources = jsArray
+                    lights.sources = jsArray
                 }
                 Timer {
                     interval: 16
@@ -257,8 +253,7 @@ Window {
             normalsImage: "ft_broken01_n.png"
             hRepeat: 2
             vRepeat: hRepeat / width * height
-            lightSources: root.lightSources
-            Connections { target: root; onSomeLightMoved: rink.update() }
+            lightSources: lights
         }
         Body {
             id: topLeftWall

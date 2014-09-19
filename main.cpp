@@ -47,6 +47,7 @@
 int main(int argc, char *argv[])
 {
     qmlRegisterType<LightedImageItem>("main", 1, 0, "LightedImage");
+    qmlRegisterType<LightGroup>("main", 1, 0, "LightGroup");
     QGuiApplication a(argc, argv);
     QQmlApplicationEngine engine("main.qml");
 

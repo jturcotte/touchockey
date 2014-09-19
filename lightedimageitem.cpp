@@ -142,17 +142,18 @@ QSGNode *LightedImageItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     auto material = static_cast<QSGSimpleMaterial<LightedImageMaterialState>*>(node->material());
     unsigned i = 0;
     material->state()->lightVec = { };
-    for (auto &item : m_lightSourceItems) {
-        if (i >= material->state()->lightVec.size())
-            break;
-        if (item->property("lightWidth").toFloat() <= 0)
-            continue;
-        material->state()->lightVec[i] = QVector3D(mapFromItem(item, item->boundingRect().center()));
-        material->state()->lightVec[i][0] *= m_hRepeat / width();
-        material->state()->lightVec[i][1] *= m_vRepeat / height();
-        material->state()->lightVec[i][2] = item->property("lightWidth").toFloat() * m_hRepeat / width();
-        ++i;
-    }
+    if (m_lightSources)
+        for (auto &item : m_lightSources->sourceItemsList()) {
+            if (i >= material->state()->lightVec.size())
+                break;
+            if (item->property("lightWidth").toFloat() <= 0)
+                continue;
+            material->state()->lightVec[i] = QVector3D(mapFromItem(item, item->boundingRect().center()));
+            material->state()->lightVec[i][0] *= m_hRepeat / width();
+            material->state()->lightVec[i][1] *= m_vRepeat / height();
+            material->state()->lightVec[i][2] = item->property("lightWidth").toFloat() * m_hRepeat / width();
+            ++i;
+        }
 
     QSGGeometry::updateTexturedRectGeometry(node->geometry(), boundingRect(), QRectF{ 0, 0, m_hRepeat, m_vRepeat });
     node->markDirty(QSGNode::DirtyGeometry);

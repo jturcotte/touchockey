@@ -1,12 +1,45 @@
 #ifndef LIGHTEDIMAGEITEM_H
 #define LIGHTEDIMAGEITEM_H
 
-#include <QQuickItem>
 #include <QQmlListProperty>
+#include <QQuickItem>
+
+class LightGroup : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(QQmlListProperty<QQuickItem> sources READ sourceItems FINAL)
+public:
+    QQmlListProperty<QQuickItem> sourceItems() {
+        return QQmlListProperty<QQuickItem>(this, &m_sourceItems, sourceAppend, sourceCount, sourceAt, sourceClear);
+    }
+    const QList<QQuickItem *> &sourceItemsList() const { return m_sourceItems; }
+
+signals:
+    void someLightMoved();
+
+private:
+    static void sourceAppend(QQmlListProperty<QQuickItem> *p, QQuickItem *v) {
+        QObject::connect(v, SIGNAL(xChanged()), p->object, SIGNAL(someLightMoved()));
+        QObject::connect(v, SIGNAL(yChanged()), p->object, SIGNAL(someLightMoved()));
+        reinterpret_cast<QList<QQuickItem *> *>(p->data)->append(v);
+    }
+    static int sourceCount(QQmlListProperty<QQuickItem> *p) {
+        return reinterpret_cast<QList<QQuickItem *> *>(p->data)->count();
+    }
+    static QQuickItem *sourceAt(QQmlListProperty<QQuickItem> *p, int idx) {
+        return reinterpret_cast<QList<QQuickItem *> *>(p->data)->at(idx);
+    }
+    static void sourceClear(QQmlListProperty<QQuickItem> *p) {
+        auto list = reinterpret_cast<QList<QQuickItem *> *>(p->data);
+        for (auto i : *list)
+            i->disconnect(p->object);
+        return list->clear();
+    }
+    QList<QQuickItem *> m_sourceItems;
+};
 
 class LightedImageItem : public QQuickItem {
     Q_OBJECT
-    Q_PROPERTY(QQmlListProperty<QQuickItem> lightSources READ lightSourceItems FINAL)
+    Q_PROPERTY(LightGroup *lightSources READ lightSources WRITE setLightSources NOTIFY lightSourcesChanged FINAL)
     Q_PROPERTY(QString sourceImage READ sourceImage WRITE setSourceImage NOTIFY sourceImageChanged FINAL)
     Q_PROPERTY(QString normalsImage READ normalsImage WRITE setNormalsImage NOTIFY normalsImageChanged FINAL)
     Q_PROPERTY(float hRepeat READ hRepeat WRITE setHRepeat NOTIFY hRepeatChanged FINAL)
@@ -15,10 +48,18 @@ public:
     LightedImageItem();
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override;
 
-    QQmlListProperty<QQuickItem> lightSourceItems() {
-        return QQmlListProperty<QQuickItem>(this, m_lightSourceItems);
+    LightGroup *lightSources() const { return m_lightSources; }
+    void setLightSources(LightGroup *value) {
+        if (m_lightSources != value) {
+            if (m_lightSources)
+                m_lightSources->disconnect(this);
+            m_lightSources = value;
+            if (m_lightSources)
+                connect(m_lightSources, SIGNAL(someLightMoved()), SLOT(update()));
+            emit lightSourcesChanged();
+            update();
+        }
     }
-
     QString sourceImage() const { return m_sourceImage; }
     void setSourceImage(QString value) {
         if (m_sourceImage != value) {
@@ -53,13 +94,14 @@ public:
     }
 
 signals:
+    void lightSourcesChanged();
     void sourceImageChanged();
     void normalsImageChanged();
     void hRepeatChanged();
     void vRepeatChanged();
 
 private:
-    QList<QQuickItem *> m_lightSourceItems;
+    LightGroup *m_lightSources = nullptr;
     QString m_sourceImage;
     QString m_normalsImage;
     float m_hRepeat = 1;
