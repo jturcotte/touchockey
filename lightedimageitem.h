@@ -32,6 +32,7 @@ private:
         auto list = reinterpret_cast<QList<QQuickItem *> *>(p->data);
         for (auto i : *list)
             i->disconnect(p->object);
+        emit static_cast<LightGroup*>(p->object)->someLightMoved();
         return list->clear();
     }
     QList<QQuickItem *> m_sourceItems;
