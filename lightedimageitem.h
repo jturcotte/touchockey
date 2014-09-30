@@ -3,6 +3,8 @@
 
 #include <QQmlListProperty>
 #include <QQuickItem>
+#include <QVector3D>
+#include <array>
 
 class LightGroup : public QObject {
     Q_OBJECT
@@ -11,15 +13,24 @@ public:
     QQmlListProperty<QQuickItem> sourceItems() {
         return QQmlListProperty<QQuickItem>(this, &m_sourceItems, sourceAppend, sourceCount, sourceAt, sourceClear);
     }
-    const QList<QQuickItem *> &sourceItemsList() const { return m_sourceItems; }
+
+    typedef std::array<QVector3D, 5> LightArray;
+    LightArray *lightWorldPositions() { return &m_syncedLightWorldPositions; }
+    void sync();
 
 signals:
     void someLightMoved();
 
+private slots:
+    void needsUpdate() {
+        m_dirty = true;
+        emit someLightMoved();
+    }
+
 private:
     static void sourceAppend(QQmlListProperty<QQuickItem> *p, QQuickItem *v) {
-        QObject::connect(v, SIGNAL(xChanged()), p->object, SIGNAL(someLightMoved()));
-        QObject::connect(v, SIGNAL(yChanged()), p->object, SIGNAL(someLightMoved()));
+        QObject::connect(v, SIGNAL(xChanged()), p->object, SLOT(needsUpdate()));
+        QObject::connect(v, SIGNAL(yChanged()), p->object, SLOT(needsUpdate()));
         reinterpret_cast<QList<QQuickItem *> *>(p->data)->append(v);
     }
     static int sourceCount(QQmlListProperty<QQuickItem> *p) {
@@ -32,10 +43,14 @@ private:
         auto list = reinterpret_cast<QList<QQuickItem *> *>(p->data);
         for (auto i : *list)
             i->disconnect(p->object);
-        emit static_cast<LightGroup*>(p->object)->someLightMoved();
+        auto o = static_cast<LightGroup*>(p->object);
+        o->m_dirty = true;
+        emit o->someLightMoved();
         return list->clear();
     }
+    bool m_dirty = true;
     QList<QQuickItem *> m_sourceItems;
+    LightArray m_syncedLightWorldPositions;
 };
 
 class LightedImageItem : public QQuickItem {

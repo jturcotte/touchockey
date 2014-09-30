@@ -4,7 +4,6 @@
 #include <QQuickWindow>
 #include <QSGSimpleMaterial>
 #include <QSGTexture>
-#include <array>
 #include <memory>
 #include <unordered_map>
 
@@ -16,6 +15,23 @@ struct hash<QString> {
     }
 };
 }
+
+struct LightedImageMaterialState
+{
+    std::shared_ptr<QSGTexture> sourceImage;
+    std::shared_ptr<QSGTexture> normalsImage;
+    LightGroup::LightArray *lightWorldPositions = nullptr;
+
+    int compare(const LightedImageMaterialState *o) const {
+        int d = sourceImage.get() - o->sourceImage.get();
+        if (d)
+            return d;
+        else if ((d = normalsImage.get() - o->normalsImage.get()) != 0)
+            return d;
+        else
+            return lightWorldPositions - o->lightWorldPositions;
+    }
+};
 
 struct LightedPoint2D {
     static LightedPoint2D *from(QSGGeometry *g) { return static_cast<LightedPoint2D *>(g->vertexData()); }
@@ -46,24 +62,6 @@ static void updateGeometry(QSGGeometry *g, const QRectF &rect, const QRectF &tex
     v[2] = { QVector2D(rect.topRight()), QVector2D(textureRect.topRight()), QVector2D(), QVector2D() };
     v[3] = { QVector2D(rect.bottomRight()), QVector2D(textureRect.bottomRight()), QVector2D(), QVector2D() };
 }
-
-struct LightedImageMaterialState
-{
-    std::shared_ptr<QSGTexture> sourceImage;
-    std::shared_ptr<QSGTexture> normalsImage;
-    std::array<QVector3D, 5> lightWorldPositions;
-
-    int compare(const LightedImageMaterialState *o) const {
-    	// FIXME: This assumes that lightWorldPositions is the same for all instances.
-        int d = sourceImage.get() - o->sourceImage.get();
-        if (d)
-            return d;
-        else if ((d = normalsImage.get() - o->normalsImage.get()) != 0)
-            return d;
-        else
-            return 0;
-    }
-};
 
 static std::shared_ptr<QSGTexture> createAndCacheTexture(QQuickWindow *window, const QString &path)
 {
@@ -169,7 +167,7 @@ public:
         state->normalsImage->bind();
         glActiveTexture(GL_TEXTURE0);
         state->sourceImage->bind();
-        program()->setUniformValueArray("lightWorldPos", state->lightWorldPositions.data(), state->lightWorldPositions.size());
+        program()->setUniformValueArray("lightWorldPos", state->lightWorldPositions->data(), state->lightWorldPositions->size());
     }
 
 };
@@ -210,6 +208,25 @@ public:
     }
 };
 
+void LightGroup::sync()
+{
+    if (!m_dirty)
+        return;
+
+    unsigned i = 0;
+    m_syncedLightWorldPositions = { };
+    for (auto &item : m_sourceItems) {
+        if (i >= m_syncedLightWorldPositions.size())
+            break;
+        if (item->property("lightWidth").toFloat() <= 0)
+            continue;
+        m_syncedLightWorldPositions[i] = QVector3D(item->mapToScene(item->boundingRect().center()));
+        m_syncedLightWorldPositions[i][2] = item->property("lightWidth").toFloat();
+        ++i;
+    }
+    m_dirty = false;
+}
+
 LightedImageItem::LightedImageItem()
 {
     setFlag(ItemHasContents);
@@ -231,18 +248,8 @@ QSGNode *LightedImageItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
     }
 
     auto material = static_cast<QSGSimpleMaterial<LightedImageMaterialState>*>(node->material());
-    unsigned i = 0;
-    material->state()->lightWorldPositions = { };
-    if (m_lightSources)
-        for (auto &item : m_lightSources->sourceItemsList()) {
-            if (i >= material->state()->lightWorldPositions.size())
-                break;
-            if (item->property("lightWidth").toFloat() <= 0)
-                continue;
-            material->state()->lightWorldPositions[i] = QVector3D(item->mapToScene(item->boundingRect().center()));
-            material->state()->lightWorldPositions[i][2] = item->property("lightWidth").toFloat();
-            ++i;
-        }
+    material->state()->lightWorldPositions = m_lightSources->lightWorldPositions();
+    m_lightSources->sync();
 
     updateGeometry(node->geometry(), boundingRect(), QRectF{ 0, 0, m_hRepeat, m_vRepeat });
     node->markDirty(QSGNode::DirtyGeometry);
