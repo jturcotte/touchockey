@@ -37,8 +37,10 @@
     initWebSocket()
 
     // Input events stuff
-    Touch.prototype.clone = function() {
-        return {identifier: this.identifier, pageX: this.pageX, pageY: this.pageY}
+    if (typeof(Touch) != "undefined") {
+        Touch.prototype.clone = function() {
+            return {identifier: this.identifier, pageX: this.pageX, pageY: this.pageY}
+        }
     }
     var lastMouse
     var lastTouch
