@@ -154,10 +154,28 @@ Window {
                 Connections {
                     target: model
                     onTouchMove: {
+                        function velocityOverlapVector(toProj, onto) {
+                            // Find what part of the push to removed in account for the current velocity
+                            // of the body (like when you can't get any faster on a bicycle unless you
+                            // start pedaling faster than what the current speed is rotating the traction
+                            // wheel).
+                            // There is surely a better formula than this, but here take the projection
+                            // of the input movement onto the current velocity vector, and remove that part,
+                            // clamping what we remove between 0 and the length of the velocity vector.
+                            var unitOnto = onto.normalized()
+                            var projLength = toProj.dotProduct(unitOnto)
+                            var effectiveProjLength = Math.max(0, Math.min(projLength, onto.length()))
+                            return unitOnto.times(effectiveProjLength)
+                        }
+                        var bodyVel = body.linearVelocity
+                        var moveVec = Qt.vector2d(x, y)
+                        var velVec = Qt.vector2d(bodyVel.x, bodyVel.y)
+                        var inputAdjustmentVec = velocityOverlapVector(moveVec, velVec)
+                        var adjustedMove = moveVec.minus(inputAdjustmentVec)
+
                         // FIXME: Find a meaning for that number
-                        var ratio = world.pixelsPerMeter * 0.0005
-                        // FIXME: Check if we get more than one move event per step.
-                        body.applyForceToCenter(Qt.point(x / ratio, y / ratio))
+                        var ratio = world.pixelsPerMeter * 0.001
+                        body.applyForceToCenter(Qt.point(adjustedMove.x / ratio, adjustedMove.y / ratio))
                         var v = Qt.vector2d(x, y)
                         var fireVel = v.normalized().times(-200)
                         fireEmitter.velocity.x = fireVel.x
