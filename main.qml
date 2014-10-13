@@ -114,8 +114,8 @@ Window {
 
                 width: playerDiameterMeters * world.pixelsPerMeter
                 height: playerDiameterMeters * world.pixelsPerMeter
-                linearDamping: 5.0
-                angularDamping: 5.0
+                linearDamping: 1
+                angularDamping: 1
                 sleepingAllowed: true
                 bullet: true // Ensures that the player doesn't jump over bodies within a step
                 bodyType: Body.Dynamic
