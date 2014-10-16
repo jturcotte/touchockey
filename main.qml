@@ -154,7 +154,7 @@ Window {
                 Connections {
                     target: model
                     onTouchMove: {
-                        function velocityOverlapVector(toProj, onto) {
+                        function velocityDifferenceVector(toProj, onto) {
                             // Find what part of the push to removed in account for the current velocity
                             // of the body (like when you can't get any faster on a bicycle unless you
                             // start pedaling faster than what the current speed is rotating the traction
@@ -167,15 +167,24 @@ Window {
                             var effectiveProjLength = Math.max(0, Math.min(projLength, onto.length()))
                             return unitOnto.times(effectiveProjLength)
                         }
-                        var bodyVel = body.linearVelocity
-                        var moveVec = Qt.vector2d(x, y)
-                        var velVec = Qt.vector2d(bodyVel.x, bodyVel.y)
-                        var inputAdjustmentVec = velocityOverlapVector(moveVec, velVec)
-                        var adjustedMove = moveVec.minus(inputAdjustmentVec)
+                        // Moving the finger 100px per second will be linearly reduced by a speed of 1m per second.
+                        var inputPixelPerMeter = 100
+                        // How much fraction of a second it takes to reach the mps described by the finger.
+                        // 1/8th of a second will be needed for the ball to reach the finger mps speed
+                        // (given that we only accelerate using the velocity difference between the controller
+                        // and the player body).
+                        var accelFactor = body.getMass() * 8
 
-                        // FIXME: Find a meaning for that number
-                        var ratio = world.pixelsPerMeter * 0.001
-                        body.applyForceToCenter(Qt.point(adjustedMove.x / ratio, adjustedMove.y / ratio))
+                        var moveTime = time ? time : 16
+                        var bodyVelMPS = body.linearVelocity
+                        var moveVecMPS = Qt.vector2d(x, y).times(1000 / moveTime / inputPixelPerMeter)
+                        var velVecMPS = Qt.vector2d(bodyVelMPS.x, bodyVelMPS.y)
+                        var inputAdjustmentVec = velocityDifferenceVector(moveVecMPS, velVecMPS)
+                        var adjustedMove = moveVecMPS.minus(inputAdjustmentVec)
+
+                        var appliedForce = adjustedMove.times(accelFactor)
+                        body.applyForceToCenter(Qt.point(appliedForce.x, appliedForce.y))
+
                         var v = Qt.vector2d(x, y)
                         var fireVel = v.normalized().times(-200)
                         fireEmitter.velocity.x = fireVel.x
