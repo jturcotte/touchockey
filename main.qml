@@ -330,6 +330,42 @@ Window {
             width: 50
             fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
         }
+        Body {
+            id: topLeftCornerWall
+            anchors { verticalCenter: rink.top; horizontalCenter: rink.left}
+            fixtures: Box {
+                anchors.centerIn: parent; rotation: 45; friction: 1.0; restitution: 1
+                width: 2 * world.pixelsPerMeter; height: 2 * world.pixelsPerMeter
+                Rectangle { anchors.fill: parent; color: "#afafafaf" }
+            }
+        }
+        Body {
+            id: topRightCornerWall
+            anchors { verticalCenter: rink.top; horizontalCenter: rink.right}
+            fixtures: Box {
+                anchors.centerIn: parent; rotation: 45; friction: 1.0; restitution: 1
+                width: 2 * world.pixelsPerMeter; height: 2 * world.pixelsPerMeter
+                Rectangle { anchors.fill: parent; color: "#afafafaf" }
+            }
+        }
+        Body {
+            id: bottomLeftCornerWall
+            anchors { verticalCenter: rink.bottom; horizontalCenter: rink.left}
+            fixtures: Box {
+                anchors.centerIn: parent; rotation: 45; friction: 1.0; restitution: 1
+                width: 2 * world.pixelsPerMeter; height: 2 * world.pixelsPerMeter
+                Rectangle { anchors.fill: parent; color: "#af000000" }
+            }
+        }
+        Body {
+            id: bottomRightCornerWall
+            anchors { verticalCenter: rink.bottom; horizontalCenter: rink.right}
+            fixtures: Box {
+                anchors.centerIn: parent; rotation: 45; friction: 1.0; restitution: 1
+                width: 2 * world.pixelsPerMeter; height: 2 * world.pixelsPerMeter
+                Rectangle { anchors.fill: parent; color: "#af000000" }
+            }
+        }
 
 
         Body {
