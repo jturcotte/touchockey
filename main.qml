@@ -22,6 +22,7 @@ Window {
         rightTeam.setup()
     }
 
+    property Component playerBodyComponent: PlayerBody {}
     property real playerDiameterMeters: 2
     property real puckDiameterMeters: 1
     property real rinkWidthMeters: Math.max(20, 20 + leftTeam.numPlayers * 5)
@@ -31,63 +32,20 @@ Window {
 
     property color rinkColor: "#43439F"
     property color puckColor: "#AF860B"
-    property string leftTeamImage: "saucer_red.png"
-    property string rightTeamImage: "saucer_blue.png"
 
     visible: true
     width: 1920
     height: 1080
     flags: Qt.Window | Qt.WindowFullscreenButtonHint
 
-    Component {
-        id: teamComponent
-        QtObject {
-            id: team
-            property string teamImage
-            property int numPlayers
-            function scored() { score++ }
-            function addPlayer(model) {
-                print("CONNECTED! " + model)
-                var b = playerBodyComponent.createObject(world, {model: model, playerImage: teamImage})
-                b.x = rink.x + 100
-                b.y = rink.y + 100
-                players.push(b)
-                numPlayers = players.length
-            }
-            function removePlayer(model) {
-                print("DISCONNECTED! " + model)
-                for (var i = 0; i < players.length; i++)
-                    if (players[i].model === model) {
-                        players[i].destroy()
-                        players.splice(i, 1)
-                        return
-                    }
-                numPlayers = players.length
-            }
-            function setup() {
-                function adjXLeft(x) { return rink.x + x }
-                function adjXRight(x) { return rink.x + rink.width - x }
-                function adjY(y) { return rink.y + y }
-                var adjX = team == leftTeam ? adjXLeft : adjXRight
-                var numCols = Math.round(Math.sqrt(players.length))
-                var numRows = Math.ceil(players.length / numCols)
-                var colDist = rink.width / 2 / (numCols + 1)
-                var rowDist = rink.height / (numRows + 1)
-                var playerI = 0
-                for (var i = 1; i <= numCols && playerI < players.length; ++i) {
-                    for (var j = 1; j <= numRows && playerI < players.length; ++j, ++playerI) {
-                        players[playerI].rotation = 0
-                        players[playerI].x = adjX(i * colDist) - players[playerI].width / 2
-                        players[playerI].y = adjY(j * rowDist) - players[playerI].height / 2
-                    }
-                }
-            }
-            property int score: 0
-            property var players: []
-        }
+    Team {
+        id: leftTeam
+        teamImage: "saucer_red.png"
     }
-    property QtObject leftTeam: teamComponent.createObject(this, {teamImage: leftTeamImage})
-    property QtObject rightTeam: teamComponent.createObject(this, {teamImage: rightTeamImage})
+    Team {
+        id: rightTeam
+        teamImage: "saucer_blue.png"
+    }
 
     Rectangle {
         id: background
@@ -103,129 +61,6 @@ Window {
         id: world
         anchors.fill: parent
         pixelsPerMeter: root.width * 0.8 / rinkWidthMeters
-
-        Component {
-            id: playerBodyComponent
-            Body {
-                id: body
-                property var model
-                property string playerImage
-                property real lightWidth: 50;
-
-                width: playerDiameterMeters * world.pixelsPerMeter
-                height: playerDiameterMeters * world.pixelsPerMeter
-                linearDamping: 1
-                angularDamping: 1
-                sleepingAllowed: true
-                bullet: true // Ensures that the player doesn't jump over bodies within a step
-                bodyType: Body.Dynamic
-                fixtures: Circle {
-                    anchors.fill: parent
-                    radius: width / 2
-                    density: 1
-                    friction: 0.4
-                    restitution: 1
-                    LightedImage {
-                        id: image
-                        anchors.fill: parent
-                        sourceImage: playerImage
-                        normalsImage: "saucer_normals.png"
-                        lightSources: lights
-                        Text {
-                            x : (parent.width - contentWidth) / 2
-                            y : (parent.height - contentHeight) / 2
-                            width: parent.width / 2
-                            height: parent.height / 2
-                            color: "#7fffffff"
-                            fontSizeMode: Text.Fit
-                            font.pointSize: 72
-                            font.weight: Font.Bold
-                            font.family: "Arial"
-                            text: model ? model.name.slice(0, 2) : ""
-                        }
-                    }
-                    Emitter {
-                        id: fireEmitter
-                        system: flamePainter.system
-                        width: 25
-                        height: 25
-                        anchors.centerIn: parent
-                        enabled: false
-
-                        lifeSpan: 160
-
-                        velocity: PointDirection { xVariation: width * 2; yVariation: height * 2 }
-
-                        size: 24
-                        sizeVariation: size
-                    }
-                }
-                Connections {
-                    target: model
-                    onTouchMove: {
-                        function velocityDifferenceVector(toProj, onto) {
-                            // Find what part of the push to removed in account for the current velocity
-                            // of the body (like when you can't get any faster on a bicycle unless you
-                            // start pedaling faster than what the current speed is rotating the traction
-                            // wheel).
-                            // There is surely a better formula than this, but here take the projection
-                            // of the input movement onto the current velocity vector, and remove that part,
-                            // clamping what we remove between 0 and the length of the velocity vector.
-                            var unitOnto = onto.normalized()
-                            var projLength = toProj.dotProduct(unitOnto)
-                            var effectiveProjLength = Math.max(0, Math.min(projLength, onto.length()))
-                            return unitOnto.times(effectiveProjLength)
-                        }
-                        // Moving the finger 100px per second will be linearly reduced by a speed of 1m per second.
-                        var inputPixelPerMeter = 100
-                        // How much fraction of a second it takes to reach the mps described by the finger.
-                        // 1/8th of a second will be needed for the ball to reach the finger mps speed
-                        // (given that we only accelerate using the velocity difference between the controller
-                        // and the player body).
-                        var accelFactor = body.getMass() * 8
-
-                        var moveTime = time ? time : 16
-                        var bodyVelMPS = body.linearVelocity
-                        var moveVecMPS = Qt.vector2d(x, y).times(1000 / moveTime / inputPixelPerMeter)
-                        var velVecMPS = Qt.vector2d(bodyVelMPS.x, bodyVelMPS.y)
-                        var inputAdjustmentVec = velocityDifferenceVector(moveVecMPS, velVecMPS)
-                        var adjustedMove = moveVecMPS.minus(inputAdjustmentVec)
-
-                        var appliedForce = adjustedMove.times(accelFactor)
-                        body.applyForceToCenter(Qt.point(appliedForce.x, appliedForce.y))
-
-                        var v = Qt.vector2d(x, y)
-                        var fireVel = v.normalized().times(-200)
-                        fireEmitter.velocity.x = fireVel.x
-                        fireEmitter.velocity.y = fireVel.y
-                        fireEmitter.burst(v.length())
-                        if (body.lightWidth < root.width / 3)
-                            body.lightWidth += v.length() * 5
-                    }
-                }
-                Component.onCompleted: {
-                    var jsArray = [body]
-                    for (var i in lights.sources)
-                        jsArray.push(lights.sources[i])
-                    lights.sources = jsArray
-                }
-                Component.onDestruction: {
-                    var jsArray = []
-                    for (var i in lights.sources) {
-                        var o = lights.sources[i]
-                        if (o != body)
-                            jsArray.push(o)
-                    }
-                    lights.sources = jsArray
-                }
-                Timer {
-                    interval: 16
-                    running: true
-                    repeat: true
-                    onTriggered: if (body.lightWidth > 0) body.lightWidth -= 50
-                }
-            }
-        }
 
         width: 1024
         height: 768
