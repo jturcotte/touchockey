@@ -45,7 +45,10 @@
 #include <QHash>
 #include <QObject>
 #include <QThread>
+#include <memory>
 #include <qqml.h>
+
+#include "httpserver.h"
 
 QT_FORWARD_DECLARE_CLASS(QTcpSocket)
 QT_FORWARD_DECLARE_CLASS(QNetworkRequest)
@@ -54,11 +57,12 @@ QT_FORWARD_DECLARE_CLASS(QWebSocket)
 
 class PlayerModel : public QObject {
     Q_OBJECT
-    Q_PROPERTY(QString name MEMBER name CONSTANT FINAL)
+    Q_PROPERTY(QString name MEMBER name NOTIFY nameChanged FINAL)
 public:
     QString name;
 
 signals:
+    void nameChanged();
     void touchStart();
     void touchMove(const QVariant &x, const QVariant &y, const QVariant &time);
     void touchEnd();
@@ -107,7 +111,8 @@ private slots:
 
 private:
     GameServer *m_pub;
-    QWebSocketServer *m_wsServer;
+    std::unique_ptr<HttpServer> m_httpServer;
+    std::unique_ptr<QWebSocketServer> m_wsServer;
     QHash<QWebSocket *, PlayerModel *> m_socketPlayerMap;
     PlayerInfoDb m_playerInfoDb;
 };

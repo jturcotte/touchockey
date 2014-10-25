@@ -15,10 +15,12 @@
         try {
             if (typeof MozWebSocket == 'function')
                 WebSocket = MozWebSocket
-            var wsUri = window.location.protocol.replace('http', 'ws') + '//' + window.location.host
+            var wsUri = window.location.protocol.replace('http', 'ws') + '//' + window.location.hostname + ":12345"
             websocket = new WebSocket( wsUri )
             websocket.onopen = function (evt) {
                 console.log("CONNECTED")
+                var m = document.cookie.match(/pid=(\w+)/)
+                this.send(JSON.stringify({type: 'init', pid: m && m[1]}))
             }
             websocket.onclose = function (evt) {
                 console.log("DISCONNECTED")

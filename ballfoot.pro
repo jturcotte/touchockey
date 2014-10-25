@@ -8,10 +8,12 @@ TEMPLATE = app
 SOURCES += \
     main.cpp \
     gameserver.cpp \
+    httpserver.cpp \
     lightedimageitem.cpp
 
 HEADERS += \
     gameserver.h \
+    httpserver.h \
     lightedimageitem.h
 
 OTHER_FILES += *.html

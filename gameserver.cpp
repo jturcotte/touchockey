@@ -51,8 +51,6 @@
 #include <QPoint>
 #include <QTcpSocket>
 
-QT_USE_NAMESPACE
-
 GameServer::GameServer(quint16 port, QObject *parent)
     : QThread(parent)
     , m_port(port)
@@ -111,12 +109,16 @@ void PlayerInfoDb::save() const
 
 GameServerImpl::GameServerImpl(GameServer *pub, quint16 port)
     : m_pub(pub)
-    , m_wsServer(new QWebSocketServer(QStringLiteral("Game Server"), QWebSocketServer::NonSecureMode, this))
+    , m_httpServer(new HttpServer)
+    , m_wsServer(new QWebSocketServer(QStringLiteral("Game Server"), QWebSocketServer::NonSecureMode))
 {
-    if (m_wsServer->listen(QHostAddress::Any, port)) {
-        qDebug() << "Game Server listening on port" << port;
-        connect(m_wsServer, &QWebSocketServer::newConnection, this, &GameServerImpl::onNewConnection);
-        connect(m_wsServer, &QWebSocketServer::normalHttpRequest, this, &GameServerImpl::handleNormalHttpRequest);
+    if (m_httpServer->listen(QHostAddress::Any, port)) {
+        qDebug() << "HTTP Server listening on port" << port;
+        connect(m_httpServer.get(), &HttpServer::normalHttpRequest, this, &GameServerImpl::handleNormalHttpRequest);
+    }
+    if (m_wsServer->listen(QHostAddress::Any, 12345)) {
+        qDebug() << "WebSocket Server listening on port" << 12345;
+        connect(m_wsServer.get(), &QWebSocketServer::newConnection, this, &GameServerImpl::onNewConnection);
     }
 }
 
@@ -137,12 +139,6 @@ void GameServerImpl::onNewConnection()
     connect(socket, &QWebSocket::disconnected, this, &GameServerImpl::socketDisconnected);
 
     auto player = new PlayerModel;
-    for (const QNetworkCookie &cookie : socket->cookies())
-        if (cookie.name() == "pid") {
-            QByteArray playerId = cookie.value();
-            player->name = m_playerInfoDb.playerInfo(playerId).value("playerName").toString();
-        }
-
     player->moveToThread(m_pub->thread());
     m_socketPlayerMap[socket] = player;
     emit m_pub->playerConnected(qVariantFromValue(player));
@@ -231,6 +227,11 @@ void GameServerImpl::processMessage(const QString &message)
         emit player->touchStart();
     else if (jsonMsg.value("type").toString() == QStringLiteral("end"))
         emit player->touchEnd();
+    else if (jsonMsg.value("type").toString() == QStringLiteral("init")) {
+        QByteArray playerId = jsonMsg.value("pid").toString().toLatin1();
+        player->name = m_playerInfoDb.playerInfo(playerId).value("playerName").toString();
+        emit player->nameChanged();
+    }
 }
 
 void GameServerImpl::socketDisconnected()
