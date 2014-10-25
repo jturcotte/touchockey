@@ -132,7 +132,16 @@ Window {
                         normalsImage: "saucer_normals.png"
                         lightSources: lights
                         Text {
-                            text: model ? model.name : ""
+                            x : (parent.width - contentWidth) / 2
+                            y : (parent.height - contentHeight) / 2
+                            width: parent.width / 2
+                            height: parent.height / 2
+                            color: "#7fffffff"
+                            fontSizeMode: Text.Fit
+                            font.pointSize: 72
+                            font.weight: Font.Bold
+                            font.family: "Arial"
+                            text: model ? model.name.slice(0, 2) : ""
                         }
                     }
                     Emitter {
