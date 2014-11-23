@@ -38,6 +38,8 @@ QtObject {
                 players[playerI].rotation = 0
                 players[playerI].x = adjX(i * colDist) - players[playerI].width / 2
                 players[playerI].y = adjY(j * rowDist) - players[playerI].height / 2
+                players[playerI].linearVelocity = Qt.point(0, 0)
+                players[playerI].angularVelocity = 0
             }
         }
     }

@@ -83,7 +83,7 @@ Window {
                 collidesWith: puck.collitionCategory
                 onBeginContact: {
                     rightTeam.scored()
-                    setupGame()
+                    scoreDialog.trigger("BLUE")
                 }
                 RectangularGlow {
                     anchors.fill: parent
@@ -104,7 +104,7 @@ Window {
                 collidesWith: puck.collitionCategory
                 onBeginContact: {
                     leftTeam.scored()
-                    setupGame()
+                    scoreDialog.trigger("RED")
                 }
                 RectangularGlow {
                     anchors.fill: parent
@@ -276,5 +276,9 @@ Window {
         text: "Score: " + rightTeam.score
         font.pointSize: 24
         anchors { right: parent.right; top: parent.top }
+    }
+    ScoreDialog {
+        id: scoreDialog
+        anchors.fill: parent
     }
 }
