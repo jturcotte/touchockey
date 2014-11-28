@@ -28,10 +28,11 @@ Window {
     property real rinkWidthMeters: Math.max(20, 20 + leftTeam.numPlayers * 5)
     property real rinkRatio: 1.5
     property real goalWidthMeters: rinkWidthMeters / rinkRatio / 4
+    property real cornerWidthMeters: rinkWidthMeters / rinkRatio / 6
     LightGroup { id: lights }
 
-    property color rinkColor: "#43439F"
     property color puckColor: "#AF860B"
+    color: "#303030"
 
     visible: true
     width: 1920
@@ -40,21 +41,18 @@ Window {
 
     Team {
         id: leftTeam
+        property color teamColor: Qt.darker("red", 2)
         teamImage: "saucer_red.png"
     }
     Team {
         id: rightTeam
+        property color teamColor: Qt.darker("blue", 1.5)
         teamImage: "saucer_blue.png"
     }
-
-    Rectangle {
-        id: background
+    Image {
         anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "gray" }
-            GradientStop { position: 0.33; color: "dimgray" }
-            GradientStop { position: 1.0; color: "black" }
-        }
+        source: "border.png"
+        fillMode: Image.Tile
     }
 
     World {
@@ -83,7 +81,7 @@ Window {
                     anchors.fill: parent
                     glowRadius: 10
                     cornerRadius: 0
-                    color: Qt.darker("red", 2)
+                    color: leftTeam.teamColor
                 }
             }
         }
@@ -104,7 +102,7 @@ Window {
                     anchors.fill: parent
                     glowRadius: 10
                     cornerRadius: 0
-                    color: Qt.darker("blue", 2)
+                    color: rightTeam.teamColor
                 }
             }
         }
@@ -173,8 +171,7 @@ Window {
             anchors { verticalCenter: rink.top; horizontalCenter: rink.left}
             fixtures: Box {
                 anchors.centerIn: parent; rotation: 45; friction: 1.0; restitution: 1
-                width: 2 * world.pixelsPerMeter; height: 2 * world.pixelsPerMeter
-                Rectangle { anchors.fill: parent; color: "#afafafaf" }
+                width: cornerWidthMeters * world.pixelsPerMeter; height: width
             }
         }
         Body {
@@ -182,8 +179,7 @@ Window {
             anchors { verticalCenter: rink.top; horizontalCenter: rink.right}
             fixtures: Box {
                 anchors.centerIn: parent; rotation: 45; friction: 1.0; restitution: 1
-                width: 2 * world.pixelsPerMeter; height: 2 * world.pixelsPerMeter
-                Rectangle { anchors.fill: parent; color: "#afafafaf" }
+                width: cornerWidthMeters * world.pixelsPerMeter; height: width
             }
         }
         Body {
@@ -191,8 +187,7 @@ Window {
             anchors { verticalCenter: rink.bottom; horizontalCenter: rink.left}
             fixtures: Box {
                 anchors.centerIn: parent; rotation: 45; friction: 1.0; restitution: 1
-                width: 2 * world.pixelsPerMeter; height: 2 * world.pixelsPerMeter
-                Rectangle { anchors.fill: parent; color: "#af000000" }
+                width: cornerWidthMeters * world.pixelsPerMeter; height: width
             }
         }
         Body {
@@ -200,9 +195,35 @@ Window {
             anchors { verticalCenter: rink.bottom; horizontalCenter: rink.right}
             fixtures: Box {
                 anchors.centerIn: parent; rotation: 45; friction: 1.0; restitution: 1
-                width: 2 * world.pixelsPerMeter; height: 2 * world.pixelsPerMeter
-                Rectangle { anchors.fill: parent; color: "#af000000" }
+                width: cornerWidthMeters * world.pixelsPerMeter; height: width
             }
+        }
+        Corner {
+            anchors { top: rink.top; left: rink.left }
+            width: Math.sqrt(cornerWidthMeters * cornerWidthMeters * 2) / 2 * world.pixelsPerMeter
+            height: width
+            color: leftTeam.teamColor
+        }
+        Corner {
+            anchors { bottom: rink.bottom; left: rink.left }
+            width: Math.sqrt(cornerWidthMeters * cornerWidthMeters * 2) / 2 * world.pixelsPerMeter
+            height: width
+            color: leftTeam.teamColor
+            rotation: -90
+        }
+        Corner {
+            anchors { top: rink.top; right: rink.right }
+            width: Math.sqrt(cornerWidthMeters * cornerWidthMeters * 2) / 2 * world.pixelsPerMeter
+            height: width
+            color: rightTeam.teamColor
+            rotation: 90
+        }
+        Corner {
+            anchors { bottom: rink.bottom; right: rink.right }
+            width: Math.sqrt(cornerWidthMeters * cornerWidthMeters * 2) / 2 * world.pixelsPerMeter
+            height: width
+            color: rightTeam.teamColor
+            rotation: 180
         }
         RinkShadow {
             anchors.fill: rink
@@ -264,23 +285,23 @@ Window {
             color: "#00ff400f"
         }
         Text {
-            color: "red"
+            color: leftTeam.teamColor
             text: leftTeam.score
             font.pointSize: 48
             font.bold: true
             font.family: "Arial"
-            style: Text.Outline; styleColor: Qt.darker(color)
+            style: Text.Outline; styleColor: Qt.lighter(color)
             anchors { left: parent.left; right: leftGoal.left; verticalCenter: leftGoal.verticalCenter }
             rotation: 90
             horizontalAlignment: Text.AlignHCenter
         }
         Text {
-            color: "blue"
+            color: rightTeam.teamColor
             text: rightTeam.score
             font.pointSize: 48
             font.bold: true
             font.family: "Arial"
-            style: Text.Outline; styleColor: Qt.darker(color)
+            style: Text.Outline; styleColor: Qt.lighter(color)
             anchors { right: parent.right; left: rightGoal.right; verticalCenter: rightGoal.verticalCenter }
             rotation: -90
             horizontalAlignment: Text.AlignHCenter
