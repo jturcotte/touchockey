@@ -83,7 +83,7 @@ Window {
                     anchors.fill: parent
                     glowRadius: 10
                     cornerRadius: 0
-                    color: "slategray"
+                    color: Qt.darker("red", 2)
                 }
             }
         }
@@ -104,7 +104,7 @@ Window {
                     anchors.fill: parent
                     glowRadius: 10
                     cornerRadius: 0
-                    color: "slategray"
+                    color: Qt.darker("blue", 2)
                 }
             }
         }
@@ -263,20 +263,30 @@ Window {
             colorVariation: 0.1
             color: "#00ff400f"
         }
+        Text {
+            color: "red"
+            text: leftTeam.score
+            font.pointSize: 48
+            font.bold: true
+            font.family: "Arial"
+            style: Text.Outline; styleColor: Qt.darker(color)
+            anchors { left: parent.left; right: leftGoal.left; verticalCenter: leftGoal.verticalCenter }
+            rotation: 90
+            horizontalAlignment: Text.AlignHCenter
+        }
+        Text {
+            color: "blue"
+            text: rightTeam.score
+            font.pointSize: 48
+            font.bold: true
+            font.family: "Arial"
+            style: Text.Outline; styleColor: Qt.darker(color)
+            anchors { right: parent.right; left: rightGoal.right; verticalCenter: rightGoal.verticalCenter }
+            rotation: -90
+            horizontalAlignment: Text.AlignHCenter
+        }
     }
 
-    Text {
-        color: "red"
-        text: "Score: " + leftTeam.score
-        font.pointSize: 24
-        anchors { left: parent.left; top: parent.top }
-    }
-    Text {
-        color: "blue"
-        text: "Score: " + rightTeam.score
-        font.pointSize: 24
-        anchors { right: parent.right; top: parent.top }
-    }
     ScoreDialog {
         id: scoreDialog
         anchors.fill: parent
