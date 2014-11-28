@@ -66,12 +66,6 @@ Window {
         height: 768
         gravity: Qt.point(0, 0)
 
-        RectangularGlow {
-            anchors.fill: rink
-            glowRadius: 25
-            color: "black"
-        }
-
         Body {
             id: leftGoal
             anchors { right: rink.left; verticalCenter: rink.verticalCenter}
@@ -210,7 +204,13 @@ Window {
                 Rectangle { anchors.fill: parent; color: "#af000000" }
             }
         }
-
+        RinkShadow {
+            anchors.fill: rink
+            glowRadius: 25
+            goalTop: leftGoal.y && mapFromItem(leftGoal, 0, 0).y
+            goalBottom: leftGoal.y && leftGoal.height && mapFromItem(leftGoal, 0, leftGoal.height).y
+            color: "#a0000000"
+        }
 
         Body {
             id: puck
