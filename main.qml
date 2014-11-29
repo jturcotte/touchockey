@@ -3,7 +3,7 @@ import QtQuick 2.2
 import QtQuick.Window 2.2
 import QtQuick.Particles 2.0
 import QtGraphicalEffects 1.0
-import Box2D 1.1
+import Box2DStatic 1.1
 
 Window {
     id: root

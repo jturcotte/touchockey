@@ -43,12 +43,17 @@
 #include <QtQml/qtqmlglobal.h>
 #include "gameserver.h"
 #include "lightedimageitem.h"
+#include <box2dplugin.h>
 
 int main(int argc, char *argv[])
 {
+    QGuiApplication a(argc, argv);
+
+    Box2DPlugin plugin;
+    plugin.registerTypes("Box2DStatic");
     qmlRegisterType<LightedImageItem>("main", 1, 0, "LightedImage");
     qmlRegisterType<LightGroup>("main", 1, 0, "LightGroup");
-    QGuiApplication a(argc, argv);
+
     QQmlApplicationEngine engine("main.qml");
 
     // Use a blocking queued connection to make sure that we've initialized the QML Connection before emitting any message from the server thread.

@@ -1,7 +1,7 @@
 import main 1.0
 import QtQuick 2.2
 import QtQuick.Particles 2.0
-import Box2D 1.1
+import Box2DStatic 1.1
 
 Body {
     id: body
