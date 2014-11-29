@@ -29,7 +29,7 @@ LightedImage {
     }
     Emitter {
         id: fireEmitter
-        property real lightWidth: 50
+        property real lightWidth: 0
         system: flamePainter.system
         width: 25
         height: 25
@@ -99,6 +99,9 @@ LightedImage {
                 var y = vec.x * Math.sin(rad) + vec.y * Math.cos(rad)
                 return Qt.vector2d(x, y)
             }
+            if (!boxWorld.running)
+                return
+
             // Moving the finger 100px per second will be linearly reduced by a speed of 1m per second.
             var inputPixelPerMeter = 100
             // How much fraction of a second it takes to reach the mps described by the finger.
@@ -122,8 +125,9 @@ LightedImage {
             fireEmitter.velocity.x = fireVel.x
             fireEmitter.velocity.y = fireVel.y
             fireEmitter.burst(v.length())
-            if (fireEmitter.lightWidth < root.width / 3)
-                fireEmitter.lightWidth += v.length() * 5
+            fireEmitter.lightWidth += v.length() * 5
+            if (fireEmitter.lightWidth > window.width / 4)
+                fireEmitter.lightWidth = window.width / 4
 
             // Move the emitter to the edge of the body
             var p = fireEmitter.parent
@@ -138,6 +142,6 @@ LightedImage {
         interval: 16
         running: true
         repeat: true
-        onTriggered: if (fireEmitter.lightWidth > 0) fireEmitter.lightWidth -= 50
+        onTriggered: if (fireEmitter.lightWidth > 1) fireEmitter.lightWidth *= 0.8; else fireEmitter.lightWidth = 0
     }
 }
