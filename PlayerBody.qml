@@ -7,7 +7,6 @@ Body {
     id: body
     property var model
     property string playerImage
-    property real lightWidth: 50;
 
     width: playerDiameterMeters * world.pixelsPerMeter
     height: playerDiameterMeters * world.pixelsPerMeter
@@ -43,10 +42,10 @@ Body {
         }
         Emitter {
             id: fireEmitter
+            property real lightWidth: 50
             system: flamePainter.system
             width: 25
             height: 25
-            anchors.centerIn: parent
             enabled: false
 
             lifeSpan: 160
@@ -55,6 +54,22 @@ Body {
 
             size: 24
             sizeVariation: size
+            Component.onCompleted: {
+                // Add body just to get a sync when it moves
+                var jsArray = [fireEmitter, body]
+                for (var i in lights.sources)
+                    jsArray.push(lights.sources[i])
+                lights.sources = jsArray
+            }
+            Component.onDestruction: {
+                var jsArray = []
+                for (var i in lights.sources) {
+                    var o = lights.sources[i]
+                    if (o != fireEmitter && o != body)
+                        jsArray.push(o)
+                }
+                lights.sources = jsArray
+            }
         }
     }
     Connections {
@@ -72,6 +87,13 @@ Body {
                 var projLength = toProj.dotProduct(unitOnto)
                 var effectiveProjLength = Math.max(0, Math.min(projLength, onto.length()))
                 return unitOnto.times(effectiveProjLength)
+            }
+            function rotate(vec, deg)
+            {
+                var rad = deg * Math.PI / 180
+                var x = vec.x * Math.cos(rad) - vec.y * Math.sin(rad)
+                var y = vec.x * Math.sin(rad) + vec.y * Math.cos(rad)
+                return Qt.vector2d(x, y)
             }
             // Moving the finger 100px per second will be linearly reduced by a speed of 1m per second.
             var inputPixelPerMeter = 100
@@ -96,29 +118,22 @@ Body {
             fireEmitter.velocity.x = fireVel.x
             fireEmitter.velocity.y = fireVel.y
             fireEmitter.burst(v.length())
-            if (body.lightWidth < root.width / 3)
-                body.lightWidth += v.length() * 5
+            if (fireEmitter.lightWidth < root.width / 3)
+                fireEmitter.lightWidth += v.length() * 5
+
+            // Move the emitter to the edge of the body
+            var p = fireEmitter.parent
+            var center = Qt.vector2d(p.width / 2, p.height / 2)
+            var vecFromCenter = rotate(v.normalized().times(p.width / 2 - fireEmitter.width), -body.rotation)
+            var pos = center.minus(vecFromCenter).minus(Qt.vector2d(fireEmitter.width / 2, fireEmitter.height / 2))
+            fireEmitter.x = pos.x
+            fireEmitter.y = pos.y
         }
-    }
-    Component.onCompleted: {
-        var jsArray = [body]
-        for (var i in lights.sources)
-            jsArray.push(lights.sources[i])
-        lights.sources = jsArray
-    }
-    Component.onDestruction: {
-        var jsArray = []
-        for (var i in lights.sources) {
-            var o = lights.sources[i]
-            if (o != body)
-                jsArray.push(o)
-        }
-        lights.sources = jsArray
     }
     Timer {
         interval: 16
         running: true
         repeat: true
-        onTriggered: if (body.lightWidth > 0) body.lightWidth -= 50
+        onTriggered: if (fireEmitter.lightWidth > 0) fireEmitter.lightWidth -= 50
     }
 }
