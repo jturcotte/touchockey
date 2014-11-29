@@ -4,10 +4,11 @@ QtObject {
     id: team
     property string teamImage
     property int numPlayers
+    property Component playerBodyComponent: PlayerBody {}
     function scored() { score++ }
     function addPlayer(model) {
         print("CONNECTED! " + model)
-        var b = playerBodyComponent.createObject(world, {model: model, playerImage: teamImage})
+        var b = playerBodyComponent.createObject(playerContainer, {model: model, playerImage: teamImage})
         b.x = rink.x + 100
         b.y = rink.y + 100
         players.push(b)
@@ -38,8 +39,8 @@ QtObject {
                 players[playerI].rotation = 0
                 players[playerI].x = adjX(i * colDist) - players[playerI].width / 2
                 players[playerI].y = adjY(j * rowDist) - players[playerI].height / 2
-                players[playerI].linearVelocity = Qt.point(0, 0)
-                players[playerI].angularVelocity = 0
+                players[playerI].body.linearVelocity = Qt.point(0, 0)
+                players[playerI].body.angularVelocity = 0
             }
         }
     }

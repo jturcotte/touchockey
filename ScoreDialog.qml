@@ -31,7 +31,7 @@ Rectangle {
         Transition {
             to: "scoreIntermission"
             SequentialAnimation {
-                PropertyAction { target: world; property: "running"; value: false}
+                PropertyAction { target: boxWorld; property: "running"; value: false}
                 PropertyAction { target: root; property: "visible"; value: true }
                 NumberAnimation { target: scoreText; properties: "x"; from: root.width; to: root.width / 2 - scoreText.width / 2; easing.type: Easing.InOutQuad }
             }
@@ -42,7 +42,7 @@ Rectangle {
                 NumberAnimation { target: scoreText; properties: "x"; to: -scoreText.width; easing.type: Easing.InOutQuad }
                 PropertyAction { target: root; property: "visible"; value: false }
                 ScriptAction { script: setupGame() }
-                PropertyAction { target: world; property: "running"; value: true}
+                PropertyAction { target: boxWorld; property: "running"; value: true}
             }
         }
     ]

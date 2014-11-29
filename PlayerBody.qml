@@ -1,75 +1,79 @@
 import main 1.0
 import QtQuick 2.2
 import QtQuick.Particles 2.0
-import Box2DStatic 1.1
+import Box2DStatic 2.0
 
-Body {
-    id: body
+LightedImage {
+    id: root
     property var model
     property string playerImage
 
-    width: playerDiameterMeters * world.pixelsPerMeter
-    height: playerDiameterMeters * world.pixelsPerMeter
-    linearDamping: 1
-    angularDamping: 1
-    sleepingAllowed: true
-    bullet: true // Ensures that the player doesn't jump over bodies within a step
-    bodyType: Body.Dynamic
-    fixtures: Circle {
-        anchors.fill: parent
-        radius: width / 2
-        density: 1
-        friction: 0.4
-        restitution: 1
-        LightedImage {
-            id: image
-            anchors.fill: parent
-            sourceImage: playerImage
-            normalsImage: "saucer_normals.png"
-            lightSources: lights
-            Text {
-                x : (parent.width - contentWidth) / 2
-                y : (parent.height - contentHeight) / 2
-                width: parent.width / 2
-                height: parent.height / 2
-                color: "#7fffffff"
-                fontSizeMode: Text.Fit
-                font.pointSize: 72
-                font.weight: Font.Bold
-                font.family: "Arial"
-                text: model ? model.name.slice(0, 2) : ""
-            }
+    width: playerDiameterMeters * boxWorld.pixelsPerMeter
+    height: playerDiameterMeters * boxWorld.pixelsPerMeter
+
+    sourceImage: playerImage
+    normalsImage: "saucer_normals.png"
+    lightSources: lights
+
+    Text {
+        x : (parent.width - contentWidth) / 2
+        y : (parent.height - contentHeight) / 2
+        width: parent.width / 2
+        height: parent.height / 2
+        color: "#7fffffff"
+        fontSizeMode: Text.Fit
+        font.pointSize: 72
+        font.weight: Font.Bold
+        font.family: "Arial"
+        text: model ? model.name.slice(0, 2) : ""
+    }
+    Emitter {
+        id: fireEmitter
+        property real lightWidth: 50
+        system: flamePainter.system
+        width: 25
+        height: 25
+        enabled: false
+
+        lifeSpan: 160
+
+        velocity: PointDirection { xVariation: width * 2; yVariation: height * 2 }
+
+        size: 24
+        sizeVariation: size
+        Component.onCompleted: {
+            // Add the item itself just to get a sync when it moves
+            var jsArray = [fireEmitter, root]
+            for (var i in lights.sources)
+                jsArray.push(lights.sources[i])
+            lights.sources = jsArray
         }
-        Emitter {
-            id: fireEmitter
-            property real lightWidth: 50
-            system: flamePainter.system
-            width: 25
-            height: 25
-            enabled: false
-
-            lifeSpan: 160
-
-            velocity: PointDirection { xVariation: width * 2; yVariation: height * 2 }
-
-            size: 24
-            sizeVariation: size
-            Component.onCompleted: {
-                // Add body just to get a sync when it moves
-                var jsArray = [fireEmitter, body]
-                for (var i in lights.sources)
-                    jsArray.push(lights.sources[i])
-                lights.sources = jsArray
+        Component.onDestruction: {
+            var jsArray = []
+            for (var i in lights.sources) {
+                var o = lights.sources[i]
+                if (o != fireEmitter && o != root)
+                    jsArray.push(o)
             }
-            Component.onDestruction: {
-                var jsArray = []
-                for (var i in lights.sources) {
-                    var o = lights.sources[i]
-                    if (o != fireEmitter && o != body)
-                        jsArray.push(o)
-                }
-                lights.sources = jsArray
-            }
+            lights.sources = jsArray
+        }
+    }
+
+    transformOrigin: Item.TopLeft
+    property QtObject body: Body {
+        target: root
+        world: boxWorld
+
+        linearDamping: 1
+        angularDamping: 1
+        sleepingAllowed: true
+        bullet: true // Ensures that the player doesn't jump over bodies within a step
+        bodyType: Body.Dynamic
+        Circle {
+            radius: root.width / 2
+            density: 1
+            friction: 0.4
+            restitution: 1
         }
     }
     Connections {
@@ -124,7 +128,7 @@ Body {
             // Move the emitter to the edge of the body
             var p = fireEmitter.parent
             var center = Qt.vector2d(p.width / 2, p.height / 2)
-            var vecFromCenter = rotate(v.normalized().times(p.width / 2 - fireEmitter.width), -body.rotation)
+            var vecFromCenter = rotate(v.normalized().times(p.width / 2 - fireEmitter.width), -root.rotation)
             var pos = center.minus(vecFromCenter).minus(Qt.vector2d(fireEmitter.width / 2, fireEmitter.height / 2))
             fireEmitter.x = pos.x
             fireEmitter.y = pos.y

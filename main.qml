@@ -3,10 +3,10 @@ import QtQuick 2.2
 import QtQuick.Window 2.2
 import QtQuick.Particles 2.0
 import QtGraphicalEffects 1.0
-import Box2DStatic 1.1
+import Box2DStatic 2.0
 
 Window {
-    id: root
+    id: window
     function onPlayerConnected(model) {
         var team = leftTeam.numPlayers > rightTeam.numPlayers ? rightTeam : leftTeam
         team.addPlayer(model)
@@ -22,7 +22,6 @@ Window {
         rightTeam.setup()
     }
 
-    property Component playerBodyComponent: PlayerBody {}
     property real playerDiameterMeters: 2
     property real puckDiameterMeters: 1
     property real rinkWidthMeters: Math.max(20, 20 + leftTeam.numPlayers * 5)
@@ -49,265 +48,234 @@ Window {
         property color teamColor: Qt.darker("blue", 1.5)
         teamImage: "saucer_blue.png"
     }
+    World {
+        id: boxWorld
+        pixelsPerMeter: window.width * 0.8 / rinkWidthMeters
+        gravity: Qt.point(0, 0)
+    }
+
     Image {
         anchors.fill: parent
         source: "border.png"
         fillMode: Image.Tile
     }
+    RectangularGlow {
+        id: leftGoal
+        anchors { right: rink.left; verticalCenter: rink.verticalCenter}
+        width: 50
+        height: goalWidthMeters * boxWorld.pixelsPerMeter
 
-    World {
-        id: world
-        anchors.fill: parent
-        pixelsPerMeter: root.width * 0.8 / rinkWidthMeters
-
-        width: 1024
-        height: 768
-        gravity: Qt.point(0, 0)
+        glowRadius: 10
+        cornerRadius: 0
+        color: leftTeam.teamColor
 
         Body {
-            id: leftGoal
-            anchors { right: rink.left; verticalCenter: rink.verticalCenter}
-            width: 50
-            height: goalWidthMeters * world.pixelsPerMeter
-            fixtures: Box {
-                anchors.fill: parent; friction: 1.0
+            target: leftGoal
+            world: boxWorld
+            Box {
+                width: leftGoal.width
+                height: leftGoal.height
                 sensor: true
                 collidesWith: puck.collitionCategory
                 onBeginContact: {
                     rightTeam.scored()
                     scoreDialog.trigger("BLUE")
                 }
-                RectangularGlow {
-                    anchors.fill: parent
-                    glowRadius: 10
-                    cornerRadius: 0
-                    color: leftTeam.teamColor
-                }
             }
         }
+    }
+    RectangularGlow {
+        id: rightGoal
+        anchors { left: rink.right; verticalCenter: rink.verticalCenter}
+        width: 50
+        height: goalWidthMeters * boxWorld.pixelsPerMeter
+
+        glowRadius: 10
+        cornerRadius: 0
+        color: rightTeam.teamColor
+
         Body {
-            id: rightGoal
-            anchors { left: rink.right; verticalCenter: rink.verticalCenter}
-            width: 50
-            height: goalWidthMeters * world.pixelsPerMeter
-            fixtures: Box {
-                anchors.fill: parent; friction: 1.0
+            target: rightGoal
+            world: boxWorld
+            Box {
+                width: rightGoal.width
+                height: rightGoal.height
+                friction: 1.0
                 sensor: true
                 collidesWith: puck.collitionCategory
                 onBeginContact: {
                     leftTeam.scored()
                     scoreDialog.trigger("RED")
                 }
-                RectangularGlow {
-                    anchors.fill: parent
-                    glowRadius: 10
-                    cornerRadius: 0
-                    color: rightTeam.teamColor
-                }
             }
+        }
+    }
+
+    LightedImage {
+        id: rink
+        width: rinkWidthMeters * boxWorld.pixelsPerMeter
+        height: rinkWidthMeters * boxWorld.pixelsPerMeter / rinkRatio
+        anchors.centerIn: parent
+        sourceImage: "ft_broken01_c.png"
+        normalsImage: "ft_broken01_n.png"
+        hRepeat: 2
+        vRepeat: hRepeat / width * height
+        lightSources: lights
+    }
+    Wall {
+        id: topLeftWall
+        anchors { top: rink.top; bottom: leftGoal.top; right: rink.left}
+        width: 50
+    }
+    Wall {
+        id: bottomLeftWall
+        anchors { top: leftGoal.bottom; bottom: rink.bottom; right: rink.left}
+        width: 50
+    }
+    Wall {
+        id: topRightWall
+        anchors { top: rink.top; bottom: rightGoal.top; left: rink.right}
+        width: 50
+    }
+    Wall {
+        id: bottomRightWall
+        anchors { top: rightGoal.bottom; bottom: rink.bottom; left: rink.right}
+        width: 50
+    }
+    Wall {
+        id: topWall
+        anchors { left: rink.left; right: rink.right; bottom: rink.top}
+        height: 50
+    }
+    Wall {
+        id: bottomWall
+        anchors { left: rink.left; right: rink.right; top: rink.bottom}
+        height: 50
+    }
+    Wall {
+        id: leftGoalLeftWall
+        anchors { right: leftGoal.left; top: leftGoal.top; bottom: leftGoal.bottom;}
+        width: 50
+    }
+    Wall {
+        id: rightGoalRightWall
+        anchors { left: rightGoal.right; top: rightGoal.top; bottom: rightGoal.bottom;}
+        width: 50
+    }
+    Corner {
+        anchors { top: rink.top; left: rink.left }
+        width: Math.sqrt(cornerWidthMeters * cornerWidthMeters * 2) / 2 * boxWorld.pixelsPerMeter
+        height: width
+        color: leftTeam.teamColor
+    }
+    Corner {
+        anchors { top: rink.bottom; left: rink.left }
+        width: Math.sqrt(cornerWidthMeters * cornerWidthMeters * 2) / 2 * boxWorld.pixelsPerMeter
+        height: width
+        color: leftTeam.teamColor
+        rotation: -90
+    }
+    Corner {
+        anchors { top: rink.top; left: rink.right }
+        width: Math.sqrt(cornerWidthMeters * cornerWidthMeters * 2) / 2 * boxWorld.pixelsPerMeter
+        height: width
+        color: rightTeam.teamColor
+        rotation: 90
+    }
+    Corner {
+        anchors { top: rink.bottom; left: rink.right }
+        width: Math.sqrt(cornerWidthMeters * cornerWidthMeters * 2) / 2 * boxWorld.pixelsPerMeter
+        height: width
+        color: rightTeam.teamColor
+        rotation: 180
+    }
+    RinkShadow {
+        anchors.fill: rink
+        glowRadius: 25
+        goalTop: leftGoal.y && mapFromItem(leftGoal, 0, 0).y
+        goalBottom: leftGoal.y && leftGoal.height && mapFromItem(leftGoal, 0, leftGoal.height).y
+        color: "#a0000000"
+    }
+
+    Rectangle {
+        id: puck
+        property int collitionCategory: Fixture.Category10
+        function setup() {
+            rotation = 0
+            x = window.width / 2 - width / 2
+            y = window.height / 2 - height / 2
+            body.linearVelocity = Qt.point(0, 0)
+            body.angularVelocity = 0
+        }
+        width: puckDiameterMeters * boxWorld.pixelsPerMeter
+        height: puckDiameterMeters * boxWorld.pixelsPerMeter
+
+        color: puckColor
+        radius: width
+        Image {
+            anchors.fill: parent
+            source: "globe.svg"
+            rotation: -puck.rotation
         }
 
-        LightedImage {
-            id: rink
-            width: rinkWidthMeters * world.pixelsPerMeter
-            height: rinkWidthMeters * world.pixelsPerMeter / rinkRatio
-            anchors.centerIn: parent
-            sourceImage: "ft_broken01_c.png"
-            normalsImage: "ft_broken01_n.png"
-            hRepeat: 2
-            vRepeat: hRepeat / width * height
-            lightSources: lights
-        }
-        Body {
-            id: topLeftWall
-            anchors { top: rink.top; bottom: leftGoal.top; right: rink.left}
-            width: 50
-            fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
-        }
-        Body {
-            id: bottomLeftWall
-            anchors { top: leftGoal.bottom; bottom: rink.bottom; right: rink.left}
-            width: 50
-            fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
-        }
-        Body {
-            id: topRightWall
-            anchors { top: rink.top; bottom: rightGoal.top; left: rink.right}
-            width: 50
-            fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
-        }
-        Body {
-            id: bottomRightWall
-            anchors { top: rightGoal.bottom; bottom: rink.bottom; left: rink.right}
-            width: 50
-            fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
-        }
-        Body {
-            id: topWall
-            anchors { left: rink.left; right: rink.right; bottom: rink.top}
-            height: 50
-            fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
-        }
-        Body {
-            id: bottomWall
-            anchors { left: rink.left; right: rink.right; top: rink.bottom}
-            height: 50
-            fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
-        }
-        Body {
-            id: leftGoalLeftWall
-            anchors { right: leftGoal.left; top: leftGoal.top; bottom: leftGoal.bottom;}
-            width: 50
-            fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
-        }
-        Body {
-            id: rightGoalRightWall
-            anchors { left: rightGoal.right; top: rightGoal.top; bottom: rightGoal.bottom;}
-            width: 50
-            fixtures: Box { anchors.fill: parent; friction: 1.0; restitution: 1 }
-        }
-        Body {
-            id: topLeftCornerWall
-            anchors { verticalCenter: rink.top; horizontalCenter: rink.left}
-            fixtures: Box {
-                anchors.centerIn: parent; rotation: 45; friction: 1.0; restitution: 1
-                width: cornerWidthMeters * world.pixelsPerMeter; height: width
-            }
-        }
-        Body {
-            id: topRightCornerWall
-            anchors { verticalCenter: rink.top; horizontalCenter: rink.right}
-            fixtures: Box {
-                anchors.centerIn: parent; rotation: 45; friction: 1.0; restitution: 1
-                width: cornerWidthMeters * world.pixelsPerMeter; height: width
-            }
-        }
-        Body {
-            id: bottomLeftCornerWall
-            anchors { verticalCenter: rink.bottom; horizontalCenter: rink.left}
-            fixtures: Box {
-                anchors.centerIn: parent; rotation: 45; friction: 1.0; restitution: 1
-                width: cornerWidthMeters * world.pixelsPerMeter; height: width
-            }
-        }
-        Body {
-            id: bottomRightCornerWall
-            anchors { verticalCenter: rink.bottom; horizontalCenter: rink.right}
-            fixtures: Box {
-                anchors.centerIn: parent; rotation: 45; friction: 1.0; restitution: 1
-                width: cornerWidthMeters * world.pixelsPerMeter; height: width
-            }
-        }
-        Corner {
-            anchors { top: rink.top; left: rink.left }
-            width: Math.sqrt(cornerWidthMeters * cornerWidthMeters * 2) / 2 * world.pixelsPerMeter
-            height: width
-            color: leftTeam.teamColor
-        }
-        Corner {
-            anchors { bottom: rink.bottom; left: rink.left }
-            width: Math.sqrt(cornerWidthMeters * cornerWidthMeters * 2) / 2 * world.pixelsPerMeter
-            height: width
-            color: leftTeam.teamColor
-            rotation: -90
-        }
-        Corner {
-            anchors { top: rink.top; right: rink.right }
-            width: Math.sqrt(cornerWidthMeters * cornerWidthMeters * 2) / 2 * world.pixelsPerMeter
-            height: width
-            color: rightTeam.teamColor
-            rotation: 90
-        }
-        Corner {
-            anchors { bottom: rink.bottom; right: rink.right }
-            width: Math.sqrt(cornerWidthMeters * cornerWidthMeters * 2) / 2 * world.pixelsPerMeter
-            height: width
-            color: rightTeam.teamColor
-            rotation: 180
-        }
-        RinkShadow {
-            anchors.fill: rink
-            glowRadius: 25
-            goalTop: leftGoal.y && mapFromItem(leftGoal, 0, 0).y
-            goalBottom: leftGoal.y && leftGoal.height && mapFromItem(leftGoal, 0, leftGoal.height).y
-            color: "#a0000000"
-        }
+        transformOrigin: Item.TopLeft
+        property QtObject body: Body {
+            target: puck
+            world: boxWorld
 
-        Body {
-            id: puck
-            property int collitionCategory: Fixture.Category10
-
-            function setup() {
-                rotation = 0
-                x = world.width / 2 - width / 2
-                y = world.height / 2 - height / 2
-                linearVelocity = Qt.point(0, 0)
-                angularVelocity = 0
-            }
-            width: puckDiameterMeters * world.pixelsPerMeter
-            height: puckDiameterMeters * world.pixelsPerMeter
             linearDamping: 3.0
             angularDamping: 3.0
             sleepingAllowed: true
             bodyType: Body.Dynamic
-            fixtures: Circle {
-                anchors.fill: parent
-                radius: width / 2
+            Circle {
+                radius: puck.width / 2
                 density: 0.5
                 friction: 0.4
                 restitution: 1
                 categories: puck.collitionCategory
-                Rectangle {
-                    anchors.fill: parent
-                    color: puckColor
-                    radius: width
-                    Image {
-                        anchors.fill: parent
-                        source: "globe.svg"
-                        rotation: -puck.rotation
-                    }
                 }
             }
-        }
-
-        Component.onCompleted: setupGame()
-        // DebugDraw {
-        //     anchors.fill: parent
-        //     world: world
-        // }
-
-        ImageParticle {
-            id: flamePainter
-            anchors.fill: parent
-            system: ParticleSystem { }
-            source: "qrc:///particleresources/glowdot.png"
-            colorVariation: 0.1
-            color: "#00ff400f"
-        }
-        Text {
-            color: leftTeam.teamColor
-            text: leftTeam.score
-            font.pointSize: 48
-            font.bold: true
-            font.family: "Arial"
-            style: Text.Outline; styleColor: Qt.lighter(color)
-            anchors { left: parent.left; right: leftGoal.left; verticalCenter: leftGoal.verticalCenter }
-            rotation: 90
-            horizontalAlignment: Text.AlignHCenter
-        }
-        Text {
-            color: rightTeam.teamColor
-            text: rightTeam.score
-            font.pointSize: 48
-            font.bold: true
-            font.family: "Arial"
-            style: Text.Outline; styleColor: Qt.lighter(color)
-            anchors { right: parent.right; left: rightGoal.right; verticalCenter: rightGoal.verticalCenter }
-            rotation: -90
-            horizontalAlignment: Text.AlignHCenter
-        }
     }
 
+    Component.onCompleted: setupGame()
+    // DebugDraw {
+    //     anchors.fill: parent
+    //     world: boxWorld
+    // }
+
+    ImageParticle {
+        id: flamePainter
+        anchors.fill: parent
+        system: ParticleSystem { }
+        source: "qrc:///particleresources/glowdot.png"
+        colorVariation: 0.1
+        color: "#00ff400f"
+    }
+    Item {
+        id: playerContainer
+    }
+    Text {
+        color: leftTeam.teamColor
+        text: leftTeam.score
+        font.pointSize: 48
+        font.bold: true
+        font.family: "Arial"
+        style: Text.Outline; styleColor: Qt.lighter(color)
+        anchors { left: parent.left; right: leftGoal.left; verticalCenter: leftGoal.verticalCenter }
+        rotation: 90
+        horizontalAlignment: Text.AlignHCenter
+    }
+    Text {
+        color: rightTeam.teamColor
+        text: rightTeam.score
+        font.pointSize: 48
+        font.bold: true
+        font.family: "Arial"
+        style: Text.Outline; styleColor: Qt.lighter(color)
+        anchors { right: parent.right; left: rightGoal.right; verticalCenter: rightGoal.verticalCenter }
+        rotation: -90
+        horizontalAlignment: Text.AlignHCenter
+    }
     ScoreDialog {
         id: scoreDialog
         anchors.fill: parent
