@@ -102,8 +102,8 @@ LightedImage {
             if (!boxWorld.running)
                 return
 
-            // Moving the finger 100px per second will be linearly reduced by a speed of 1m per second.
-            var inputPixelPerMeter = 100
+            // Moving the finger 75px per second will be linearly reduced by a speed of 1m per second.
+            var inputPixelPerMeter = 75
             // How much fraction of a second it takes to reach the mps described by the finger.
             // 1/8th of a second will be needed for the ball to reach the finger mps speed
             // (given that we only accelerate using the velocity difference between the controller
