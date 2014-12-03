@@ -3,9 +3,28 @@
 <title>WebSocket Remote Game Controller</title>
 <meta name="viewport" content="initial-scale=1, maximum-scale=1">
 </head>
-<body>
+<body style="margin: 0; background-color: #202020; overflow: hidden">
 <div id="fullscreenBtn" style="background-color: grey; position: fixed; top: 5px; right: 5px; width: 40px; height: 40px;">
     <img style="width: 100%;" src="IKONS/SVG/resize_1.svg"/>
+</div>
+<div id="joystickContainer" style="display: none; position: absolute; width: 100px; height: 100px">
+    <div id="joystickTip" style="z-index: -1; position: absolute; width: 80px; height: 80px">
+        <svg style="width: 100%; height: 100%">
+            <g transform="translate(0,-972.36218)">
+            <path d="m 59.999985,1024.3622 c -6.627428,0 -11.999985,-5.3726 -11.999985,-12 0,-6.6274 5.372557,-12 11.999985,-12 6.627428,0 20.000015,12 20.000015,12 0,0 -13.372587,12 -20.000015,12 z"
+            style="fill:#cf0000;fill-opacity:1;stroke:none" />
+            <path d="m 28,1032.3622 c 0,-6.6274 5.37263,-11.9998 12.00005,-11.9998 6.62741,0 11.999998,5.3724 11.999998,11.9998 0,6.6275 -11.999998,20 -11.999998,20 0,0 -12.00005,-13.3725 -12.00005,-20 z"
+            style="fill:#cf0000;fill-opacity:1;stroke:none" />
+            <path d="m 52,992.36221 c 0,6.62742 -5.372583,11.99999 -12,11.99999 -6.627416,0 -12,-5.37257 -12,-11.99999 0,-6.62742 12,-19.99999 12,-19.99999 0,0 12,13.37257 12,19.99999 z"
+            style="fill:#cf0000;fill-opacity:1;stroke:none" />
+            <path d="m 19.99999,1000.3622 c 6.627421,0 11.99997,5.3726 11.99997,12 0,6.6274 -5.37255,12 -11.99997,12 -6.62742,0 -19.99999,-12 -19.99999,-12 0,0 13.372571,-12 19.99999,-12 z"
+            style="fill:#cf0000;fill-opacity:1;stroke:none" />
+            </g>
+        </svg>
+    </div>
+    <svg style="width: 100%; height: 100%">
+        <circle cx="50" cy="50" r="49" stroke="#4f4f4f" stroke-width="1" fill="#404040" />
+    </svg>
 </div>
 <script src="tap.js"></script>
 <script type="text/javascript">
@@ -38,6 +57,35 @@
     }
     initWebSocket()
 
+    // Visual input feedback stuff
+    Element.prototype.setTransform = function(t) {
+        this.style.webkitTransform = t
+        this.style.MozTransform = t
+        this.style.msTransform = t
+        this.style.OTransform = t
+        this.style.transform = t
+    }
+    Joystick = {
+        container: document.getElementById('joystickContainer'),
+        tip: document.getElementById('joystickTip'),
+        show: function() {
+            this.container.style.display = null
+            this.containerHalfWidth = this.container.clientWidth / 2
+            this.tipHalfWidth = this.tip.clientWidth / 2
+        },
+        hide: function() {
+            this.container.style.display = "none"
+        },
+        setPos: function(x, y) {
+            var offset = this.containerHalfWidth
+            this.container.setTransform("translateZ(0) translate(" + (x - offset) + "px," + (y - offset) + "px)")
+        },
+        setDelta: function(x, y) {
+            var offset = this.containerHalfWidth - this.tipHalfWidth
+            this.tip.setTransform("translateZ(0) translate(" + (-x + offset) + "px," + (-y + offset) + "px)")
+        }
+    }
+
     // Input events stuff
     if (typeof(Touch) != "undefined") {
         Touch.prototype.clone = function() {
@@ -51,15 +99,22 @@
         if (websocket.readyState == 3)
             initWebSocket()
         lastMouse = e
+        Joystick.show()
         websocket.send(JSON.stringify({type: 'start'}))
     }
     function handleMouseUp(e){
         websocket.send(JSON.stringify({type: 'end'}))
+        Joystick.hide()
     }
     function handleMouseMove(e){
         if (e.which) {
-            websocket.send(JSON.stringify({type: 'move', x: e.clientX - lastMouse.clientX, y: e.clientY - lastMouse.clientY, t: e.timeStamp - lastMouse.timeStamp}))
+            var xDelta = e.clientX - lastMouse.clientX
+            var yDelta = e.clientY - lastMouse.clientY
+            websocket.send(JSON.stringify({type: 'move', x: xDelta, y: yDelta, t: e.timeStamp - lastMouse.timeStamp}))
             lastMouse = e
+
+            Joystick.setPos(e.clientX, e.clientY)
+            Joystick.setDelta(xDelta * 5, yDelta * 5)
         }
     }
     function handleTouchStart(e) {
@@ -72,6 +127,10 @@
             var t = e.changedTouches[0]
             lastTouch = t.clone()
             lastTouch.timeStamp = e.timeStamp
+
+            Joystick.show()
+            Joystick.setPos(t.pageX, t.pageY)
+            Joystick.setDelta(0, 0)
         }
     }
     function handleTouchMove(e) {
@@ -80,9 +139,14 @@
         for (var i = 0; i < e.changedTouches.length; i++) {
             var t = e.changedTouches[i]
             if (t.identifier == lastTouch.identifier) {
-                websocket.send(JSON.stringify({type: 'move', x: t.pageX - lastTouch.pageX, y: t.pageY - lastTouch.pageY, t: e.timeStamp - lastTouch.timeStamp}))
+                var xDelta = t.pageX - lastTouch.pageX
+                var yDelta = t.pageY - lastTouch.pageY
+                websocket.send(JSON.stringify({type: 'move', x: xDelta, y: yDelta, t: e.timeStamp - lastTouch.timeStamp}))
                 lastTouch = t.clone()
                 lastTouch.timeStamp = e.timeStamp
+
+                Joystick.setPos(t.pageX, t.pageY)
+                Joystick.setDelta(xDelta * 5, yDelta * 5)
             }
         }
     }
@@ -93,6 +157,8 @@
             if (e.changedTouches[i].identifier == lastTouch.identifier) {
                 websocket.send(JSON.stringify({type: 'end'}));
                 lastTouch = null
+
+                Joystick.hide()
             }
     }
 
