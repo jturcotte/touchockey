@@ -9,6 +9,7 @@ TEMPLATE = app
     error("Can't find Box2D sources, please run `git submodule update --init`.")
 }
 include(qml-box2d/box2d-static.pri)
+include(qtqrencode/qqrencode/qqrencode.pri)
 
 SOURCES += \
     main.cpp \

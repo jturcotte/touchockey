@@ -7,6 +7,7 @@ import Box2DStatic 2.0
 
 Window {
     id: window
+    property alias connectUrl: leftPanel.connectUrl
     function onPlayerConnected(model) {
         var team = leftTeam.numPlayers > rightTeam.numPlayers ? rightTeam : leftTeam
         team.addPlayer(model)
@@ -115,7 +116,11 @@ Window {
         id: rink
         width: rinkWidthMeters * boxWorld.pixelsPerMeter
         height: rinkWidthMeters * boxWorld.pixelsPerMeter / rinkRatio
-        anchors.centerIn: parent
+        anchors {
+            verticalCenter: parent.verticalCenter
+            right: parent.right
+            rightMargin: rightGoal.width * 1.5
+        }
         sourceImage: "ft_broken01_c.png"
         normalsImage: "ft_broken01_n.png"
         hRepeat: 2
@@ -202,8 +207,8 @@ Window {
         property int collitionCategory: Fixture.Category10
         function setup() {
             rotation = 0
-            x = window.width / 2 - width / 2
-            y = window.height / 2 - height / 2
+            x = rink.x + rink.width / 2 - width / 2
+            y = rink.y + rink.height / 2 - height / 2
             body.linearVelocity = Qt.point(0, 0)
             body.angularVelocity = 0
         }
@@ -254,27 +259,20 @@ Window {
     Item {
         id: playerContainer
     }
-    Text {
-        color: leftTeam.teamColor
-        text: leftTeam.score
-        font.pointSize: 48
-        font.bold: true
-        font.family: "Arial"
-        style: Text.Outline; styleColor: Qt.lighter(color)
-        anchors { left: parent.left; right: leftGoal.left; verticalCenter: leftGoal.verticalCenter }
-        rotation: 90
-        horizontalAlignment: Text.AlignHCenter
-    }
-    Text {
-        color: rightTeam.teamColor
-        text: rightTeam.score
-        font.pointSize: 48
-        font.bold: true
-        font.family: "Arial"
-        style: Text.Outline; styleColor: Qt.lighter(color)
-        anchors { right: parent.right; left: rightGoal.right; verticalCenter: rightGoal.verticalCenter }
-        rotation: -90
-        horizontalAlignment: Text.AlignHCenter
+    LeftPanel {
+        id: leftPanel
+        anchors {
+            top: parent.top
+            bottom: parent.bottom
+            left: parent.left
+            right: rink.left
+            leftMargin: leftGoal.width * 0.5
+            rightMargin: leftGoal.width * 0.5
+            bottomMargin: leftGoal.width * 0.5
+            topMargin: leftGoal.width * 0.5
+        }
+        leftTeam: leftTeam
+        rightTeam: rightTeam
     }
     ScoreDialog {
         id: scoreDialog

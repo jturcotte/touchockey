@@ -1,3 +1,6 @@
 [submodule "qml-box2d"]
 	path = qml-box2d
 	url = git://github.com/qml-box2d/qml-box2d.git
+[submodule "qtqrencode"]
+	path = qtqrencode
+	url = ../qtqrencode.git

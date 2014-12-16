@@ -45,6 +45,38 @@
 #include "lightedimageitem.h"
 #include <box2dplugin.h>
 
+#include "qqrencode.h"
+#include <QImage>
+#include <QNetworkInterface>
+#include <QQuickImageProvider>
+
+class ImageProvider : public QQuickImageProvider
+{
+public:
+    ImageProvider(QUrl url)
+        : QQuickImageProvider(QQuickImageProvider::Image)
+        , m_url(std::move(url))
+    { }
+    QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize) override
+    {
+        QImage image;
+        if (id == QLatin1String("connectQr")) {
+            QQREncode encoder;
+            encoder.encode(m_url.toString());
+            image = encoder.toQImage();
+            image.invertPixels();
+        }
+        if (!requestedSize.isEmpty())
+            image = image.scaled(requestedSize);
+        if (size)
+            *size = image.size();
+        return image;
+    }
+
+private:
+    QUrl m_url;
+};
+
 int main(int argc, char *argv[])
 {
     QGuiApplication a(argc, argv);
@@ -54,7 +86,17 @@ int main(int argc, char *argv[])
     qmlRegisterType<LightedImageItem>("main", 1, 0, "LightedImage");
     qmlRegisterType<LightGroup>("main", 1, 0, "LightGroup");
 
-    QQmlApplicationEngine engine("main.qml");
+    QUrl url{QStringLiteral("http://localhost:1234")};
+    for (const QHostAddress &address : QNetworkInterface::allAddresses())
+        if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost)) {
+            url.setHost(address.toString());
+            break;
+        }
+
+    QQmlApplicationEngine engine;
+    engine.addImageProvider("main", new ImageProvider{url});
+    engine.load("main.qml");
+    engine.rootObjects().first()->setProperty("connectUrl", url);
 
     // Use a blocking queued connection to make sure that we've initialized the QML Connection before emitting any message from the server thread.
     GameServer server(1234);
