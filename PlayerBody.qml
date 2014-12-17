@@ -29,7 +29,7 @@ LightedImage {
     }
     Emitter {
         id: fireEmitter
-        property real lightWidth: 0
+        property real lightIntensity: 0
         system: flamePainter.system
         width: 25
         height: 25
@@ -125,9 +125,9 @@ LightedImage {
             fireEmitter.velocity.x = fireVel.x
             fireEmitter.velocity.y = fireVel.y
             fireEmitter.burst(v.length())
-            fireEmitter.lightWidth += v.length() * 5
-            if (fireEmitter.lightWidth > window.width / 4)
-                fireEmitter.lightWidth = window.width / 4
+            fireEmitter.lightIntensity += v.length() * 0.01
+            if (fireEmitter.lightIntensity > 1)
+                fireEmitter.lightIntensity = 1
 
             // Move the emitter to the edge of the body
             var p = fireEmitter.parent
@@ -142,6 +142,6 @@ LightedImage {
         interval: 16
         running: true
         repeat: true
-        onTriggered: if (fireEmitter.lightWidth > 1) fireEmitter.lightWidth *= 0.8; else fireEmitter.lightWidth = 0
+        onTriggered: if (fireEmitter.lightIntensity > 0.01) fireEmitter.lightIntensity *= 0.8; else fireEmitter.lightIntensity = 0
     }
 }

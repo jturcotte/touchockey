@@ -14,8 +14,10 @@ public:
         return QQmlListProperty<QQuickItem>(this, &m_sourceItems, sourceAppend, sourceCount, sourceAt, sourceClear);
     }
 
-    typedef std::array<QVector3D, 5> LightArray;
-    LightArray *lightWorldPositions() { return &m_syncedLightWorldPositions; }
+    typedef std::array<QVector2D, 5> LightPosArray;
+    typedef std::array<float, 5> LightIntensityArray;
+    LightPosArray *lightWorldPositions() { return &m_syncedLightWorldPositions; }
+    LightIntensityArray *lightIntensities() { return &m_syncedLightIntensities; }
     void sync();
 
 signals:
@@ -50,7 +52,8 @@ private:
     }
     bool m_dirty = true;
     QList<QQuickItem *> m_sourceItems;
-    LightArray m_syncedLightWorldPositions;
+    LightPosArray m_syncedLightWorldPositions;
+    LightIntensityArray m_syncedLightIntensities;
 };
 
 class LightedImageItem : public QQuickItem {

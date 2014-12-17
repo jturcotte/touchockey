@@ -20,7 +20,8 @@ struct LightedImageMaterialState
 {
     std::shared_ptr<QSGTexture> sourceImage;
     std::shared_ptr<QSGTexture> normalsImage;
-    LightGroup::LightArray *lightWorldPositions = nullptr;
+    LightGroup::LightPosArray *lightWorldPositions = nullptr;
+    LightGroup::LightIntensityArray *lightIntensities = nullptr;
 
     int compare(const LightedImageMaterialState *o) const {
         int d = sourceImage.get() - o->sourceImage.get();
@@ -28,8 +29,10 @@ struct LightedImageMaterialState
             return d;
         else if ((d = normalsImage.get() - o->normalsImage.get()) != 0)
             return d;
+        else if ((d = lightWorldPositions - o->lightWorldPositions) != 0)
+            return d;
         else
-            return lightWorldPositions - o->lightWorldPositions;
+            return lightIntensities - o->lightIntensities;
     }
 };
 
@@ -89,7 +92,8 @@ public:
             attribute highp vec2 tex;
             attribute highp vec3 tangent;
             attribute highp vec3 vertWorldPos;
-            uniform highp vec3 lightWorldPos[numberOfLights];
+            uniform highp vec2 lightWorldPos[numberOfLights];
+            uniform highp float lightIntensities[numberOfLights];
             uniform highp mat4 qt_Matrix;
             varying highp vec2 qt_TexCoord0;
             varying highp vec3 lightVecTangent[numberOfLights];
@@ -107,7 +111,7 @@ public:
 
                 for(int i = 0; i < numberOfLights; i++) {
                     // Get the light vector
-                    vec3 lightVec = lightWorldPos[i] - vertWorldPos;
+                    vec3 lightVec = vec3(lightWorldPos[i], 50.0 * lightIntensities[i]) - vertWorldPos;
                     // Rotate the vector into tangent space
                     lightVecTangent[i] = toTanMat * lightVec;
                 }
@@ -121,6 +125,7 @@ public:
             varying highp vec2 qt_TexCoord0;
             varying highp vec3 lightVecTangent[numberOfLights];
             uniform highp float qt_Opacity;
+            uniform highp float lightIntensities[numberOfLights];
             uniform sampler2D sourceImage;
             uniform sampler2D normalsImage;
 
@@ -129,22 +134,22 @@ public:
                 highp vec4 pix = texture2D(sourceImage, pixPos.st);
                 highp vec4 pix2 = texture2D(normalsImage, pixPos.st);
                 highp vec3 normal = vec3(pix2.rg * 2.0 - 1.0, pix2.b);
-                highp float diffuse = 0.0;
+                highp float diffuse = 0.66;
 
                 // Unroll the loop, my HD3000 doesn't like non-const array lookups.
                 highp vec3 relVec;
                 relVec = normalize(lightVecTangent[0]);
-                diffuse += step(0.01, relVec.z) * dot(normal, relVec);
+                diffuse += lightIntensities[0] * 0.4 * dot(normal, relVec);
                 relVec = normalize(lightVecTangent[1]);
-                diffuse += step(0.01, relVec.z) * dot(normal, relVec);
+                diffuse += lightIntensities[1] * 0.4 * dot(normal, relVec);
                 relVec = normalize(lightVecTangent[2]);
-                diffuse += step(0.01, relVec.z) * dot(normal, relVec);
+                diffuse += lightIntensities[2] * 0.4 * dot(normal, relVec);
                 relVec = normalize(lightVecTangent[3]);
-                diffuse += step(0.01, relVec.z) * dot(normal, relVec);
+                diffuse += lightIntensities[3] * 0.4 * dot(normal, relVec);
                 relVec = normalize(lightVecTangent[4]);
-                diffuse += step(0.01, relVec.z) * dot(normal, relVec);
+                diffuse += lightIntensities[4] * 0.4 * dot(normal, relVec);
 
-                diffuse = clamp(diffuse, 0.66, 1.0);
+                diffuse = clamp(diffuse, 0.0, 1.0);
 
                 highp vec4 color = vec4(diffuse * pix.rgb, pix.a);
                 gl_FragColor = color * qt_Opacity;
@@ -168,6 +173,7 @@ public:
         glActiveTexture(GL_TEXTURE0);
         state->sourceImage->bind();
         program()->setUniformValueArray("lightWorldPos", state->lightWorldPositions->data(), state->lightWorldPositions->size());
+        program()->setUniformValueArray("lightIntensities", state->lightIntensities->data(), state->lightIntensities->size(), 1);
     }
 
 };
@@ -215,13 +221,14 @@ void LightGroup::sync()
 
     unsigned i = 0;
     m_syncedLightWorldPositions = { };
+    m_syncedLightIntensities = { };
     for (auto &item : m_sourceItems) {
         if (i >= m_syncedLightWorldPositions.size())
             break;
-        if (item->property("lightWidth").toFloat() <= 0)
+        if (item->property("lightIntensity").toFloat() <= 0)
             continue;
-        m_syncedLightWorldPositions[i] = QVector3D(item->mapToScene(item->boundingRect().center()));
-        m_syncedLightWorldPositions[i][2] = item->property("lightWidth").toFloat();
+        m_syncedLightWorldPositions[i] = QVector2D(item->mapToScene(item->boundingRect().center()));
+        m_syncedLightIntensities[i] = item->property("lightIntensity").toFloat();
         ++i;
     }
     m_dirty = false;
@@ -249,6 +256,7 @@ QSGNode *LightedImageItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData
 
     auto material = static_cast<QSGSimpleMaterial<LightedImageMaterialState>*>(node->material());
     material->state()->lightWorldPositions = m_lightSources->lightWorldPositions();
+    material->state()->lightIntensities = m_lightSources->lightIntensities();
     m_lightSources->sync();
 
     updateGeometry(node->geometry(), boundingRect(), QRectF{ 0, 0, m_hRepeat, m_vRepeat });
