@@ -52,7 +52,13 @@ Q_GLOBAL_STATIC_WITH_ARGS(const QString, REGISTRY_SCREENSAVER_KEY, (QLatin1Strin
 
 QScreenSaverPrivate::QScreenSaverPrivate(QScreenSaver *parent)
     : q_ptr(parent)
+    , wasEnabled(screenSaverEnabled())
 {
+}
+
+QScreenSaverPrivate::~QScreenSaverPrivate()
+{
+    setScreenSaverEnabled(wasEnabled);
 }
 
 bool QScreenSaverPrivate::screenSaverEnabled()

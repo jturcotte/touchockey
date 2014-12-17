@@ -61,6 +61,7 @@ class QScreenSaverPrivate
 {
 public:
     QScreenSaverPrivate(QScreenSaver *parent);
+    ~QScreenSaverPrivate();
 
     bool screenSaverEnabled();
     void setScreenSaverEnabled(bool enabled);
@@ -68,6 +69,7 @@ public:
 private:
     QScreenSaver * const q_ptr;
     Q_DECLARE_PUBLIC(QScreenSaver)
+    bool wasEnabled;
 };
 
 QT_END_NAMESPACE

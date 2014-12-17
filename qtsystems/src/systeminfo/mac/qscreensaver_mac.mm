@@ -56,7 +56,6 @@ QScreenSaverPrivate::QScreenSaverPrivate(QScreenSaver *parent)
 
 QScreenSaverPrivate::~QScreenSaverPrivate()
 {
-    setScreenSaverEnabled(false);
 }
 
 bool QScreenSaverPrivate::screenSaverEnabled()
@@ -66,7 +65,7 @@ bool QScreenSaverPrivate::screenSaverEnabled()
 
 void QScreenSaverPrivate::setScreenSaverEnabled(bool on)
 {
-    if (on) {
+    if (!on) {
         setScreenSaverInhibit();
     } else {
         if (ssTimer->isActive())

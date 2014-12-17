@@ -49,7 +49,13 @@ QT_BEGIN_NAMESPACE
 
 QScreenSaverPrivate::QScreenSaverPrivate(QScreenSaver *parent)
     : q_ptr(parent)
+    , wasEnabled(screenSaverEnabled())
 {
+}
+
+QScreenSaverPrivate::~QScreenSaverPrivate()
+{
+    setScreenSaverEnabled(wasEnabled);
 }
 
 bool QScreenSaverPrivate::screenSaverEnabled()
