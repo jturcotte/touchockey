@@ -228,8 +228,8 @@ Window {
             target: puck
             world: boxWorld
 
-            linearDamping: 3.0
-            angularDamping: 3.0
+            linearDamping: 2.0
+            angularDamping: 2.0
             sleepingAllowed: true
             bodyType: Body.Dynamic
             Circle {
