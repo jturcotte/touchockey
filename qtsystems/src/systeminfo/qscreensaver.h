@@ -42,14 +42,13 @@
 #ifndef QSCREENSAVER_H
 #define QSCREENSAVER_H
 
-#include <QtSystemInfo/qsysteminfoglobal.h>
 #include <QtCore/qobject.h>
 
 QT_BEGIN_NAMESPACE
 
 class QScreenSaverPrivate;
 
-class Q_SYSTEMINFO_EXPORT QScreenSaver : public QObject
+class QScreenSaver : public QObject
 {
     Q_OBJECT
 

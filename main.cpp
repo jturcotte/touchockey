@@ -41,9 +41,10 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QtQml/qtqmlglobal.h>
+#include <box2dplugin.h>
 #include "gameserver.h"
 #include "lightedimageitem.h"
-#include <box2dplugin.h>
+#include "qscreensaver.h"
 
 #include "qqrencode.h"
 #include <QImage>
@@ -80,6 +81,8 @@ private:
 int main(int argc, char *argv[])
 {
     QGuiApplication a(argc, argv);
+    QScreenSaver screenSaver;
+    screenSaver.setScreenSaverEnabled(false);
 
     Box2DPlugin plugin;
     plugin.registerTypes("Box2DStatic");
