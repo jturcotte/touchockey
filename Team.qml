@@ -20,7 +20,7 @@ QtObject {
             if (players[i].model === model) {
                 players[i].destroy()
                 players.splice(i, 1)
-                return
+                break
             }
         numPlayers = players.length
     }

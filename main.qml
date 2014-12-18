@@ -15,6 +15,7 @@ Window {
     }
     function onPlayerDisconnected(model) {
         leftTeam.removePlayer(model)
+        rightTeam.removePlayer(model)
     }
 
     function setupGame() {
