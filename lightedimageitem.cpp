@@ -228,7 +228,7 @@ void LightGroup::sync()
         if (item->property("lightIntensity").toFloat() <= 0)
             continue;
         m_syncedLightWorldPositions[i] = QVector2D(item->mapToScene(item->boundingRect().center()));
-        m_syncedLightIntensities[i] = item->property("lightIntensity").toFloat();
+        m_syncedLightIntensities[i] = fmin(1.0, item->property("lightIntensity").toFloat());
         ++i;
     }
     m_dirty = false;

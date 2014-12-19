@@ -125,9 +125,9 @@ LightedImage {
             fireEmitter.velocity.x = fireVel.x
             fireEmitter.velocity.y = fireVel.y
             fireEmitter.burst(v.length())
-            fireEmitter.lightIntensity += v.length() * 0.01
-            if (fireEmitter.lightIntensity > 1)
-                fireEmitter.lightIntensity = 1
+            fireEmitter.lightIntensity += v.length() * 0.05
+            if (fireEmitter.lightIntensity > 2)
+                fireEmitter.lightIntensity = 2
 
             // Move the emitter to the edge of the body
             var p = fireEmitter.parent
@@ -142,6 +142,6 @@ LightedImage {
         interval: 16
         running: true
         repeat: true
-        onTriggered: if (fireEmitter.lightIntensity > 0.01) fireEmitter.lightIntensity *= 0.8; else fireEmitter.lightIntensity = 0
+        onTriggered: if (fireEmitter.lightIntensity > 0.01) fireEmitter.lightIntensity *= 0.5; else fireEmitter.lightIntensity = 0
     }
 }
