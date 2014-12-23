@@ -20,5 +20,13 @@
     <file>qml/Team.qml</file>
     <file>qml/Wall.qml</file>
     <file>qml/main.qml</file>
+    <file>sounds/goal.wav</file>
+    <file>sounds/hit_ball.wav</file>
+    <file>sounds/hit_high.wav</file>
+    <file>sounds/hit_low.wav</file>
+    <file>sounds/hit_medium.wav</file>
+    <file>sounds/sfx.bfxrlibrary</file>
+    <file>sounds/thruster_high.wav</file>
+    <file>sounds/thruster_low.wav</file>
 </qresource>
 </RCC>

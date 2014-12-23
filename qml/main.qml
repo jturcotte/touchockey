@@ -3,6 +3,7 @@ import QtQuick 2.2
 import QtQuick.Window 2.2
 import QtQuick.Particles 2.0
 import QtGraphicalEffects 1.0
+import QtMultimedia 5.0
 import Box2DStatic 2.0
 
 Window {
@@ -31,6 +32,11 @@ Window {
     property real goalWidthMeters: rinkWidthMeters / rinkRatio / 4
     property real cornerWidthMeters: rinkWidthMeters / rinkRatio / 6
     LightGroup { id: lights }
+    SoundEffect { id: hitLowSound; source: "qrc:/sounds/hit_low.wav" }
+    SoundEffect { id: hitMediumSound; source: "qrc:/sounds/hit_medium.wav" }
+    SoundEffect { id: hitHighSound; source: "qrc:/sounds/hit_high.wav" }
+    SoundEffect { id: hitBallSound; source: "qrc:/sounds/hit_ball.wav" }
+    SoundEffect { id: goalSound; source: "qrc:/sounds/goal.wav" }
 
     property color puckColor: "#AF860B"
     color: "#303030"
@@ -54,6 +60,22 @@ Window {
         id: boxWorld
         pixelsPerMeter: window.width * 0.8 / rinkWidthMeters
         gravity: Qt.point(0, 0)
+        onPreSolve: {
+            var bodyA = contact.fixtureA.getBody();
+            var bodyB = contact.fixtureB.getBody();
+            var velA = bodyA.linearVelocity
+            var velB = bodyB.linearVelocity
+            var length = Qt.vector2d(velA.x, velA.y).minus(Qt.vector2d(velB.x, velB.y)).length()
+
+            if ((bodyA == puckBody || bodyB == puckBody) && length > 4)
+                hitBallSound.play()
+            else if (length > 30)
+                hitHighSound.play()
+            else if (length > 10)
+                hitMediumSound.play()
+            else if (length > 4)
+                hitLowSound.play()
+        }
     }
 
     Image {
@@ -81,6 +103,7 @@ Window {
                 collidesWith: puck.collitionCategory
                 onBeginContact: {
                     rightTeam.scored()
+                    goalSound.play()
                     scoreDialog.trigger("BLUE")
                 }
             }
@@ -107,6 +130,7 @@ Window {
                 collidesWith: puck.collitionCategory
                 onBeginContact: {
                     leftTeam.scored()
+                    goalSound.play()
                     scoreDialog.trigger("RED")
                 }
             }
@@ -226,6 +250,7 @@ Window {
 
         transformOrigin: Item.TopLeft
         property QtObject body: Body {
+            id: puckBody
             target: puck
             world: boxWorld
 
