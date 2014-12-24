@@ -12,7 +12,7 @@ LightedImage {
     height: playerDiameterMeters * boxWorld.pixelsPerMeter
 
     sourceImage: playerImage
-    normalsImage: "saucer_normals.png"
+    normalsImage: "qrc:/images/saucer_normals.png"
     lightSources: lights
 
     Text {

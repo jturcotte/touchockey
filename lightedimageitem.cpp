@@ -9,8 +9,8 @@
 
 namespace std {
 template <>
-struct hash<QString> {
-    size_t operator()(const QString &x) const {
+struct hash<QUrl> {
+    size_t operator()(const QUrl &x) const {
         return qHash(x);
     }
 };
@@ -66,13 +66,18 @@ static void updateGeometry(QSGGeometry *g, const QRectF &rect, const QRectF &tex
     v[3] = { QVector2D(rect.bottomRight()), QVector2D(textureRect.bottomRight()), QVector2D(), QVector2D() };
 }
 
-static std::shared_ptr<QSGTexture> createAndCacheTexture(QQuickWindow *window, const QString &path)
+static std::shared_ptr<QSGTexture> createAndCacheTexture(QQuickWindow *window, const QUrl &path)
 {
-    static std::unordered_map<QString, std::weak_ptr<QSGTexture>> cachedTexturesMap;
+    static std::unordered_map<QUrl, std::weak_ptr<QSGTexture>> cachedTexturesMap;
     std::weak_ptr<QSGTexture> &cachedTexture = cachedTexturesMap[path];
     std::shared_ptr<QSGTexture> texture = cachedTexture.lock();
     if (!texture) {
-        texture.reset(window->createTextureFromImage(QImage{ path }));
+        QString stringPath;
+        if (path.scheme() == QLatin1String("qrc"))
+            stringPath = QStringLiteral(":") + path.path();
+        else
+            stringPath = path.toString();
+        texture.reset(window->createTextureFromImage(QImage{stringPath}));
         texture->setHorizontalWrapMode(QSGTexture::Repeat);
         texture->setVerticalWrapMode(QSGTexture::Repeat);
         cachedTexture = texture;

@@ -21,3 +21,4 @@ HEADERS += \
     httpserver.h \
     lightedimageitem.h
 
+RESOURCES += touchockey.qrc

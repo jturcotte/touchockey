@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
     engine.addImageProvider("main", new ImageProvider{url});
-    engine.load("main.qml");
+    engine.load(QUrl{"qrc:/qml/main.qml"});
     engine.rootObjects().first()->setProperty("connectUrl", url);
 
     // Use a blocking queued connection to make sure that we've initialized the QML Connection before emitting any message from the server thread.

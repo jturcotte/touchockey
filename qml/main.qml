@@ -43,12 +43,12 @@ Window {
     Team {
         id: leftTeam
         property color teamColor: Qt.darker("red", 2)
-        teamImage: "saucer_red.png"
+        teamImage: "qrc:/images/saucer_red.png"
     }
     Team {
         id: rightTeam
         property color teamColor: Qt.darker("blue", 1.5)
-        teamImage: "saucer_blue.png"
+        teamImage: "qrc:/images/saucer_blue.png"
     }
     World {
         id: boxWorld
@@ -58,7 +58,7 @@ Window {
 
     Image {
         anchors.fill: parent
-        source: "border.png"
+        source: "qrc:/images/border.png"
         fillMode: Image.Tile
     }
     RectangularGlow {
@@ -122,8 +122,8 @@ Window {
             right: parent.right
             rightMargin: rightGoal.width * 1.5
         }
-        sourceImage: "ft_broken01_c.png"
-        normalsImage: "ft_broken01_n.png"
+        sourceImage: "qrc:/images/ft_broken01_c.png"
+        normalsImage: "qrc:/images/ft_broken01_n.png"
         hRepeat: 2
         vRepeat: hRepeat / width * height
         lightSources: lights
@@ -220,7 +220,7 @@ Window {
         radius: width
         Image {
             anchors.fill: parent
-            source: "globe.svg"
+            source: "qrc:/images/globe.svg"
             rotation: -puck.rotation
         }
 
@@ -253,7 +253,7 @@ Window {
         id: flamePainter
         anchors.fill: parent
         system: ParticleSystem { }
-        source: "qrc:///particleresources/glowdot.png"
+        source: "qrc:/particleresources/glowdot.png"
         colorVariation: 0.1
         color: "#00ff400f"
     }

@@ -59,8 +59,8 @@ private:
 class LightedImageItem : public QQuickItem {
     Q_OBJECT
     Q_PROPERTY(LightGroup *lightSources READ lightSources WRITE setLightSources NOTIFY lightSourcesChanged FINAL)
-    Q_PROPERTY(QString sourceImage READ sourceImage WRITE setSourceImage NOTIFY sourceImageChanged FINAL)
-    Q_PROPERTY(QString normalsImage READ normalsImage WRITE setNormalsImage NOTIFY normalsImageChanged FINAL)
+    Q_PROPERTY(QUrl sourceImage READ sourceImage WRITE setSourceImage NOTIFY sourceImageChanged FINAL)
+    Q_PROPERTY(QUrl normalsImage READ normalsImage WRITE setNormalsImage NOTIFY normalsImageChanged FINAL)
     Q_PROPERTY(float hRepeat READ hRepeat WRITE setHRepeat NOTIFY hRepeatChanged FINAL)
     Q_PROPERTY(float vRepeat READ vRepeat WRITE setVRepeat NOTIFY vRepeatChanged FINAL)
 public:
@@ -79,16 +79,16 @@ public:
             update();
         }
     }
-    QString sourceImage() const { return m_sourceImage; }
-    void setSourceImage(QString value) {
+    QUrl sourceImage() const { return m_sourceImage; }
+    void setSourceImage(QUrl value) {
         if (m_sourceImage != value) {
             m_sourceImage = value;
             emit sourceImageChanged();
             update();
         }
     }
-    QString normalsImage() const { return m_normalsImage; }
-    void setNormalsImage(QString value) {
+    QUrl normalsImage() const { return m_normalsImage; }
+    void setNormalsImage(QUrl value) {
         if (m_normalsImage != value) {
             m_normalsImage = value;
             emit normalsImageChanged();
@@ -121,8 +121,8 @@ signals:
 
 private:
     LightGroup *m_lightSources = nullptr;
-    QString m_sourceImage;
-    QString m_normalsImage;
+    QUrl m_sourceImage;
+    QUrl m_normalsImage;
     float m_hRepeat = 1;
     float m_vRepeat = 1;
 };

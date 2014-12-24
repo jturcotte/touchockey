@@ -1,0 +1,24 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+<qresource prefix="/">
+    <file>client/IKONS/SVG/resize_1.svg</file>
+    <file>client/controller.html</file>
+    <file>client/index.html</file>
+    <file>client/tap.js</file>
+    <file>images/border.png</file>
+    <file>images/ft_broken01_c.png</file>
+    <file>images/ft_broken01_n.png</file>
+    <file>images/globe.svg</file>
+    <file>images/saucer_blue.png</file>
+    <file>images/saucer_normals.png</file>
+    <file>images/saucer_red.png</file>
+    <file>qml/Corner.qml</file>
+    <file>qml/LeftPanel.qml</file>
+    <file>qml/PlayerBody.qml</file>
+    <file>qml/RinkShadow.qml</file>
+    <file>qml/ScoreDialog.qml</file>
+    <file>qml/Team.qml</file>
+    <file>qml/Wall.qml</file>
+    <file>qml/main.qml</file>
+</qresource>
+</RCC>

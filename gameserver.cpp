@@ -195,7 +195,7 @@ void GameServerImpl::handleNormalHttpRequest(const QByteArray &method, const QNe
             connection->write(jsonData);
         }
 
-        path.prepend("client");
+        path.prepend(":/client");
         QFile file(path);
         if (file.open(QFile::ReadOnly)) {
             connection->write("HTTP/1.1 200 OK\r\n");
