@@ -138,10 +138,49 @@ void GameServerImpl::onNewConnection()
     connect(socket, &QWebSocket::textMessageReceived, this, &GameServerImpl::processMessage);
     connect(socket, &QWebSocket::disconnected, this, &GameServerImpl::socketDisconnected);
 
-    auto player = new PlayerModel;
+    auto player = new PlayerModel{socket};
     player->moveToThread(m_pub->thread());
+    connect(player, SIGNAL(vibrate(int)), SLOT(onPlayerVibrate(int)));
     m_socketPlayerMap[socket] = player;
     emit m_pub->playerConnected(qVariantFromValue(player));
+}
+
+void GameServerImpl::processMessage(const QString &message)
+{
+    PlayerModel *player = m_socketPlayerMap[static_cast<QWebSocket *>(sender())];
+    if (!player)
+        return;
+
+    QJsonObject jsonMsg = QJsonDocument::fromJson(message.toLatin1()).object();
+    if (jsonMsg.value("type").toString() == QStringLiteral("move"))
+        emit player->touchMove(jsonMsg.value("x").toDouble(), jsonMsg.value("y").toDouble(), jsonMsg.value("t").toInt());
+    else if (jsonMsg.value("type").toString() == QStringLiteral("start"))
+        emit player->touchStart();
+    else if (jsonMsg.value("type").toString() == QStringLiteral("end"))
+        emit player->touchEnd();
+    else if (jsonMsg.value("type").toString() == QStringLiteral("init")) {
+        QByteArray playerId = jsonMsg.value("pid").toString().toLatin1();
+        player->name = m_playerInfoDb.playerInfo(playerId).value("playerName").toString();
+        emit player->nameChanged();
+    }
+}
+
+void GameServerImpl::socketDisconnected()
+{
+    QWebSocket *socket = qobject_cast<QWebSocket *>(sender());
+    if (socket) {
+        PlayerModel *player = m_socketPlayerMap.take(socket);
+        emit m_pub->playerDisconnected(qVariantFromValue(player));
+
+        socket->deleteLater();
+        player->deleteLater();
+    }
+}
+
+void GameServerImpl::onPlayerVibrate(int milliseconds)
+{
+    QString jsonMsg = QStringLiteral("{\"type\":\"vibrate\",\"ms\":%1}").arg(milliseconds);
+    static_cast<PlayerModel *>(sender())->socket->sendTextMessage(jsonMsg);
 }
 
 void GameServerImpl::handleNormalHttpRequest(const QByteArray &method, const QNetworkRequest &request, const QByteArray &body, QTcpSocket *connection)
@@ -212,36 +251,4 @@ void GameServerImpl::handleNormalHttpRequest(const QByteArray &method, const QNe
         }
     }
     connection->close();
-}
-
-void GameServerImpl::processMessage(const QString &message)
-{
-    PlayerModel *player = m_socketPlayerMap[static_cast<QWebSocket *>(sender())];
-    if (!player)
-        return;
-
-    QJsonObject jsonMsg = QJsonDocument::fromJson(message.toLatin1()).object();
-    if (jsonMsg.value("type").toString() == QStringLiteral("move"))
-        emit player->touchMove(jsonMsg.value("x").toDouble(), jsonMsg.value("y").toDouble(), jsonMsg.value("t").toInt());
-    else if (jsonMsg.value("type").toString() == QStringLiteral("start"))
-        emit player->touchStart();
-    else if (jsonMsg.value("type").toString() == QStringLiteral("end"))
-        emit player->touchEnd();
-    else if (jsonMsg.value("type").toString() == QStringLiteral("init")) {
-        QByteArray playerId = jsonMsg.value("pid").toString().toLatin1();
-        player->name = m_playerInfoDb.playerInfo(playerId).value("playerName").toString();
-        emit player->nameChanged();
-    }
-}
-
-void GameServerImpl::socketDisconnected()
-{
-    QWebSocket *socket = qobject_cast<QWebSocket *>(sender());
-    if (socket) {
-        PlayerModel *player = m_socketPlayerMap.take(socket);
-        emit m_pub->playerDisconnected(qVariantFromValue(player));
-
-        socket->deleteLater();
-        player->deleteLater();
-    }
 }

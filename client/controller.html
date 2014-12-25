@@ -44,12 +44,13 @@
             websocket.onclose = function (evt) {
                 console.log("DISCONNECTED")
             }
-            websocket.onmessage = function (evt) {
-                console.log( "Message received :", evt.data )
-                console.log( evt.data )
-            }
             websocket.onerror = function (evt) {
                 console.log('ERROR: ' + evt.data)
+            }
+            websocket.onmessage = function (evt) {
+                var msg = JSON.parse(evt.data)
+                if (window.navigator.vibrate)
+                    window.navigator.vibrate(msg.ms)
             }
         } catch (exception) {
             console.log('ERROR: ' + exception)

@@ -59,13 +59,18 @@ class PlayerModel : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString name MEMBER name NOTIFY nameChanged FINAL)
 public:
+    QWebSocket *socket;
     QString name;
+
+    PlayerModel(QWebSocket *socket) : socket(socket) { }
 
 signals:
     void nameChanged();
     void touchStart();
     void touchMove(const QVariant &x, const QVariant &y, const QVariant &time);
     void touchEnd();
+
+    void vibrate(int milliseconds);
 };
 
 class GameServer : public QThread {
@@ -107,6 +112,7 @@ private slots:
     void onNewConnection();
     void processMessage(const QString &message);
     void socketDisconnected();
+    void onPlayerVibrate(int milliseconds);
     void handleNormalHttpRequest(const QByteArray &method, const QNetworkRequest &request, const QByteArray &body, QTcpSocket *connection);
 
 private:

@@ -67,6 +67,13 @@ Window {
             var velB = bodyB.linearVelocity
             var length = Qt.vector2d(velA.x, velA.y).minus(Qt.vector2d(velB.x, velB.y)).length()
 
+            // Send vibration impact feedback
+            if (bodyA.target.model)
+                bodyA.target.model.vibrate(length * 2)
+            if (bodyB.target.model)
+                bodyB.target.model.vibrate(length * 2)
+
+            // Play impact sounds
             if ((bodyA == puckBody || bodyB == puckBody) && length > 4)
                 hitBallSound.play()
             else if (length > 30)
