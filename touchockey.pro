@@ -9,6 +9,7 @@ TEMPLATE = app
 include(qml-box2d/box2d-static.pri)
 include(qtqrencode/qqrencode/qqrencode.pri)
 include(qtsystems/src/systeminfo/qscreensaver.pri)
+DEFINES += LIBQTQRENCODE_STATIC
 
 SOURCES += \
     main.cpp \

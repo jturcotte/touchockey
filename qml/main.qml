@@ -12,7 +12,7 @@ Window {
     function onPlayerConnected(model) {
         var team = leftTeam.numPlayers > rightTeam.numPlayers ? rightTeam : leftTeam
         team.addPlayer(model)
-        team.setup()
+        setupGame()
     }
     function onPlayerDisconnected(model) {
         leftTeam.removePlayer(model)
@@ -44,7 +44,7 @@ Window {
     visible: true
     width: 1920
     height: 1080
-    flags: Qt.Window | Qt.WindowFullscreenButtonHint
+    flags: Qt.platform.os == "osx"  ? (Qt.Window | Qt.WindowFullscreenButtonHint) : Qt.Window
 
     Team {
         id: leftTeam
@@ -275,7 +275,6 @@ Window {
             }
     }
 
-    Component.onCompleted: setupGame()
     // DebugDraw {
     //     anchors.fill: parent
     //     world: boxWorld

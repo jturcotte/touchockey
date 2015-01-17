@@ -1,5 +1,6 @@
 #include "lightedimageitem.h"
 
+#include <QOpenGLFunctions>
 #include <QSGGeometryNode>
 #include <QQuickWindow>
 #include <QSGSimpleMaterial>
@@ -173,9 +174,10 @@ public:
     }
 
     void updateState(const LightedImageMaterialState *state, const LightedImageMaterialState *) override {
-        glActiveTexture(GL_TEXTURE1);
+        QOpenGLFunctions *functions = QOpenGLContext::currentContext()->functions();
+        functions->glActiveTexture(GL_TEXTURE1);
         state->normalsImage->bind();
-        glActiveTexture(GL_TEXTURE0);
+        functions->glActiveTexture(GL_TEXTURE0);
         state->sourceImage->bind();
         program()->setUniformValueArray("lightWorldPos", state->lightWorldPositions->data(), state->lightWorldPositions->size());
         program()->setUniformValueArray("lightIntensities", state->lightIntensities->data(), state->lightIntensities->size(), 1);
