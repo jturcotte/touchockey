@@ -18,7 +18,7 @@ There is no limit to the number or players that can join, but I didn't try more 
 
 Install
 -------
-Binaries are available for OSX and Windows, install vcredist_x86.exe if you get a missing MSVCR120.dll error on Window.
+[Binaries](https://github.com/jturcotte/touchockey/releases) are available for OSX and Windows, install vcredist_x86.exe if you get a missing MSVCR120.dll error on Windows.
 
 To build from sources
 ---------------------
