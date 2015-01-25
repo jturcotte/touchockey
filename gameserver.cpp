@@ -41,7 +41,7 @@
 #include "gameserver.h"
 #include "QtWebSockets/QWebSocketServer"
 #include "QtWebSockets/QWebSocket"
-#include <QtCore/QDebug>
+#include <QDir>
 #include <QFile>
 #include <QUuid>
 #include <QJsonDocument>
@@ -49,6 +49,7 @@
 #include <QMimeDatabase>
 #include <QNetworkCookie>
 #include <QPoint>
+#include <QStandardPaths>
 #include <QTcpSocket>
 
 GameServer::GameServer(quint16 port, QObject *parent)
@@ -88,7 +89,7 @@ void PlayerInfoDb::setPlayerInfo(const QByteArray &playerId, const QJsonObject &
 
 void PlayerInfoDb::load()
 {
-    QFile file("playerinfo.json");
+    QFile file(QStandardPaths::writableLocation(QStandardPaths::DataLocation) + "/playerinfo.json");
     if (file.open(QFile::ReadOnly)) {
         const QJsonObject root = QJsonDocument::fromJson(file.readAll()).object();
         for (auto i = root.begin(); i != root.end(); ++i)
@@ -98,7 +99,11 @@ void PlayerInfoDb::load()
 
 void PlayerInfoDb::save() const
 {
-    QFile file("playerinfo.json");
+    QDir dataDir(QStandardPaths::writableLocation(QStandardPaths::DataLocation));
+    if (!dataDir.exists())
+        dataDir.mkpath(".");
+
+    QFile file(dataDir.filePath("playerinfo.json"));
     if (file.open(QFile::WriteOnly)) {
         QJsonObject root;
         for (auto i = m_infoMap.begin(); i != m_infoMap.end(); ++i)
