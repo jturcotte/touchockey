@@ -1,7 +1,7 @@
 touchockey
 ==========
 
-This is a shared screen multiplayer hockey game allowing you to play on local network with your friends using your mobile phone as game controller.
+This is a shared screen multiplayer hockey game allowing you to play on local network with your friends using your mobile phone's browser as game controller.
 
 Comments are welcome on [Google+](https://plus.google.com/111347271351455592833/posts/UHrhH6WdGsk) and [Twitter](https://twitter.com/jocesaying/status/559394373138649088)
 
