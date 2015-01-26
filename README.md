@@ -11,7 +11,8 @@ Comments are welcome on [Google+](https://plus.google.com/111347271351455592833/
 To play
 -------
 - Make sure that all client phones are on the same WiFi network.
-- Scan the QR Code with a phone or enter the shown HTTP address manually in the web browser.
+- Execute the game's server [executable](https://github.com/jturcotte/touchockey/releases) on a computer
+- Scan the QR Code displayed on the screen with a phone (or enter the shown HTTP address manually in the web browser). The phone's browser will load the HTML controller client directly from the computer.
 - Enter your name and then move your fingers on the phone screen, the player on the computer screen will follow the movements. Move your fingers quickly to make the player move faster.
 
 The goal of the game is to push the puck in the blue goal if you are red, or vice-versa. Points are shown but the game never ends.
