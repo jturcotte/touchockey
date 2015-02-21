@@ -35,6 +35,7 @@ QtObject {
         b.y = rink.y + 100
         players.push(b)
         numPlayers = players.length
+        setup(b)
     }
     function removePlayer(model) {
         print("DISCONNECTED! " + model)
@@ -46,23 +47,28 @@ QtObject {
             }
         numPlayers = players.length
     }
-    function setup() {
+    function setup(player) {
+        var playersToSetup
+        if (player)
+            playersToSetup = [player]
+        else
+            playersToSetup = players
         function adjXLeft(x) { return rink.x + x }
         function adjXRight(x) { return rink.x + rink.width - x }
         function adjY(y) { return rink.y + y }
         var adjX = team == leftTeam ? adjXLeft : adjXRight
-        var numCols = Math.round(Math.sqrt(players.length))
-        var numRows = Math.ceil(players.length / numCols)
+        var numCols = Math.round(Math.sqrt(playersToSetup.length))
+        var numRows = Math.ceil(playersToSetup.length / numCols)
         var colDist = rink.width / 2 / (numCols + 1)
         var rowDist = rink.height / (numRows + 1)
         var playerI = 0
-        for (var i = 1; i <= numCols && playerI < players.length; ++i) {
-            for (var j = 1; j <= numRows && playerI < players.length; ++j, ++playerI) {
-                players[playerI].rotation = 0
-                players[playerI].x = adjX(i * colDist) - players[playerI].width / 2
-                players[playerI].y = adjY(j * rowDist) - players[playerI].height / 2
-                players[playerI].body.linearVelocity = Qt.point(0, 0)
-                players[playerI].body.angularVelocity = 0
+        for (var i = 1; i <= numCols && playerI < playersToSetup.length; ++i) {
+            for (var j = 1; j <= numRows && playerI < playersToSetup.length; ++j, ++playerI) {
+                playersToSetup[playerI].rotation = 0
+                playersToSetup[playerI].x = adjX(i * colDist) - playersToSetup[playerI].width / 2
+                playersToSetup[playerI].y = adjY(j * rowDist) - playersToSetup[playerI].height / 2
+                playersToSetup[playerI].body.linearVelocity = Qt.point(0, 0)
+                playersToSetup[playerI].body.angularVelocity = 0
             }
         }
     }

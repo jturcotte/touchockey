@@ -34,7 +34,8 @@ Window {
     function onPlayerConnected(model) {
         var team = leftTeam.numPlayers > rightTeam.numPlayers ? rightTeam : leftTeam
         team.addPlayer(model)
-        setupGame()
+        if (leftTeam.numPlayers + rightTeam.numPlayers == 1)
+            setupGame()
     }
     function onPlayerDisconnected(model) {
         leftTeam.removePlayer(model)
