@@ -266,7 +266,9 @@ Window {
             y = rink.y + rink.height / 2 - height / 2
             body.linearVelocity = Qt.point(0, 0)
             body.angularVelocity = 0
+            visible = true
         }
+        visible: false
         width: puckDiameterMeters * boxWorld.pixelsPerMeter
         height: puckDiameterMeters * boxWorld.pixelsPerMeter
 
