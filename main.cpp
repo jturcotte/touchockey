@@ -47,7 +47,6 @@ public:
             QQREncode encoder;
             encoder.encode(m_url.toString());
             image = encoder.toQImage();
-            image.invertPixels();
         }
         if (!requestedSize.isEmpty())
             image = image.scaled(requestedSize);
