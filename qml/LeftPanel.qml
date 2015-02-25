@@ -98,7 +98,8 @@ Item {
     Image {
         id: connectQrImg
         source: "image://main/connectQr"
-        sourceSize {width: width; height: width }
+        smooth: false
+        height: width
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.bottom: connectUrlText.top
