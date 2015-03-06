@@ -1,0 +1,8 @@
+#!/bin/sh
+export PKG_CONFIG_SYSROOT_DIR=/mnt/rasp-pi-rootfs
+export PKG_CONFIG_LIBDIR=/mnt/rasp-pi-rootfs/usr/lib/pkgconfig:/mnt/rasp-pi-rootfs/usr/share/pkgconfig:/mnt/rasp-pi-rootfs/usr/lib/arm-linux-gnueabihf/pkgconfig
+if [ "$#" -gt 0 ]; then
+  /home/joce/dev/qt5/qtbase/configure -optimized-qmake -device linux-rasp-pi-g++ -nomake examples -make tools -release -device-option CROSS_COMPILE=/opt/x-tools/arm-linux-gnueabihf-raspi/bin/arm-linux-gnueabihf- -prefix /usr/local/qt5pi2 -hostprefix /home/joce/dev/build-qt5-touchockey-prefix -reduce-exports -sysroot /mnt/rasp-pi-rootfs -confirm-license -no-widgets -no-feature-BEARERMANAGEMENT -no-rpath "$@"
+else
+  /home/joce/dev/qt5/qtbase/configure -optimized-qmake -device linux-rasp-pi-g++ -nomake examples -make tools -release -device-option CROSS_COMPILE=/opt/x-tools/arm-linux-gnueabihf-raspi/bin/arm-linux-gnueabihf- -prefix /usr/local/qt5pi2 -hostprefix /home/joce/dev/build-qt5-touchockey-prefix -reduce-exports -sysroot /mnt/rasp-pi-rootfs -confirm-license -no-widgets -no-feature-BEARERMANAGEMENT -no-rpath
+fi

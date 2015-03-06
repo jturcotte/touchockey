@@ -1,0 +1,54 @@
+From 8b6555581bf4a0fa726b79a83a815c5651fb0876 Mon Sep 17 00:00:00 2001
+From: Jocelyn Turcotte <jturcotte@woboq.com>
+Date: Fri, 6 Mar 2015 11:09:03 +0100
+Subject: [PATCH] Use 720p max with eglfs on the raspberrypi
+
+Use dispmanx to use the full resolution by scaling
+it up using the hardware compositor, but report 720p
+max to Qt to put a lower stress on GL code.
+---
+ mkspecs/devices/linux-rasp-pi-g++/qeglfshooks_pi.cpp | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
+
+diff --git a/mkspecs/devices/linux-rasp-pi-g++/qeglfshooks_pi.cpp b/mkspecs/devices/linux-rasp-pi-g++/qeglfshooks_pi.cpp
+index 8994d61..9ccf5c9 100644
+--- a/mkspecs/devices/linux-rasp-pi-g++/qeglfshooks_pi.cpp
++++ b/mkspecs/devices/linux-rasp-pi-g++/qeglfshooks_pi.cpp
+@@ -43,14 +43,10 @@
+ QT_BEGIN_NAMESPACE
+ 
+ static DISPMANX_DISPLAY_HANDLE_T dispman_display = 0;
++static VC_RECT_T dst_rect;
+ 
+-static EGLNativeWindowType createDispmanxLayer(const QPoint &pos, const QSize &size, int z, DISPMANX_FLAGS_ALPHA_T flags)
++static EGLNativeWindowType createDispmanxLayer(const QPoint &, const QSize &size, int z, DISPMANX_FLAGS_ALPHA_T flags)
+ {
+-    VC_RECT_T dst_rect;
+-    dst_rect.x = pos.x();
+-    dst_rect.y = pos.y();
+-    dst_rect.width = size.width();
+-    dst_rect.height = size.height();
+ 
+     VC_RECT_T src_rect;
+     src_rect.x = 0;
+@@ -154,7 +150,16 @@ QSize QEglFSPiHooks::screenSize() const
+ {
+     uint32_t width, height;
+     graphics_get_display_size(0 /* LCD */, &width, &height);
+-    return QSize(width, height);
++    dst_rect.x = 0;
++    dst_rect.y = 0;
++    dst_rect.width = width;
++    dst_rect.height = height;
++    QSize reported(width, height);
++    // The game isn't fast enough in 1080p, report a lower resolution and
++    // let dispmanx scale it up in that case.
++    if (height > 720)
++        reported.scale(width, 720, Qt::KeepAspectRatio);
++    return reported;
+ }
+ 
+ EGLNativeWindowType QEglFSPiHooks::createNativeWindow(QPlatformWindow *window, const QSize &size, const QSurfaceFormat &format)
+-- 
+2.3.1
+
