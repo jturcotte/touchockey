@@ -26,5 +26,9 @@ HEADERS += \
 
 RESOURCES += touchockey.qrc
 
-lowfi: DEFINES += LOWFI=1
-else: DEFINES += LOWFI=0
+rpi {
+    QMAKE_LFLAGS += '-Wl,-rpath,\'\$$ORIGIN\''
+    DEFINES += LOWFI=1
+} else {
+    DEFINES += LOWFI=0
+}

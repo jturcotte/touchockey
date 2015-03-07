@@ -34,6 +34,12 @@ git submodule update --init
 qmake && make
 ```
 
+To build for the Raspberry Pi:
+```
+git submodule update --init
+qmake CONFIG+=rpi && make
+```
+
 Known issues
 ------------
 - There is no frame rate adaptation of any sort, so if your computer can't get you v-synced 60fps it will feel horrible. Try reducing the resolution or the size of the window otherwise.
