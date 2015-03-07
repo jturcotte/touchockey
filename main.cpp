@@ -26,6 +26,7 @@
 #include <box2dplugin.h>
 #include "gameserver.h"
 #include "lightedimageitem.h"
+#include "playerbox2dbody.h"
 #include "qscreensaver.h"
 
 #include "qqrencode.h"
@@ -69,6 +70,7 @@ int main(int argc, char *argv[])
     plugin.registerTypes("Box2DStatic");
     qmlRegisterType<LightedImageItem>("main", 1, 0, "LightedImage");
     qmlRegisterType<LightGroup>("main", 1, 0, "LightGroup");
+    qmlRegisterType<PlayerBox2DBody>("main", 1, 0, "PlayerBox2DBody");
 
     QUrl url{QStringLiteral("http://localhost:1234")};
     for (const QHostAddress &address : QNetworkInterface::allAddresses())
@@ -81,6 +83,7 @@ int main(int argc, char *argv[])
     engine.addImageProvider("main", new ImageProvider{url});
     engine.load(QUrl{"qrc:/qml/main.qml"});
     engine.rootObjects().first()->setProperty("connectUrl", url);
+    engine.rootObjects().first()->setProperty("lowfi", LOWFI);
 
     // Use a blocking queued connection to make sure that we've initialized the QML Connection before emitting any message from the server thread.
     GameServer server(1234);

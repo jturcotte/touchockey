@@ -31,6 +31,7 @@ import Box2DStatic 2.0
 Window {
     id: window
     property alias connectUrl: leftPanel.connectUrl
+    property bool lowfi: true
     function onPlayerConnected(model) {
         var team = leftTeam.numPlayers > rightTeam.numPlayers ? rightTeam : leftTeam
         team.addPlayer(model)
@@ -62,7 +63,7 @@ Window {
     SoundEffect { id: goalSound; source: "qrc:/sounds/goal.wav" }
 
     property color puckColor: "#AF860B"
-    color: "#303030"
+    color: "#101010"
 
     visible: true
     width: 1920
@@ -109,18 +110,16 @@ Window {
     }
 
     Image {
+        visible: !lowfi
         anchors.fill: parent
         source: "qrc:/images/border.png"
         fillMode: Image.Tile
     }
-    RectangularGlow {
+    Rectangle {
         id: leftGoal
         anchors { right: rink.left; verticalCenter: rink.verticalCenter}
         width: 50
         height: goalWidthMeters * boxWorld.pixelsPerMeter
-
-        glowRadius: 10
-        cornerRadius: 0
         color: leftTeam.teamColor
 
         Body {
@@ -139,14 +138,11 @@ Window {
             }
         }
     }
-    RectangularGlow {
+    Rectangle {
         id: rightGoal
         anchors { left: rink.right; verticalCenter: rink.verticalCenter}
         width: 50
         height: goalWidthMeters * boxWorld.pixelsPerMeter
-
-        glowRadius: 10
-        cornerRadius: 0
         color: rightTeam.teamColor
 
         Body {
@@ -250,6 +246,7 @@ Window {
         rotation: 180
     }
     RinkShadow {
+        visible: !lowfi
         anchors.fill: rink
         glowRadius: 25
         goalTop: leftGoal.y && mapFromItem(leftGoal, 0, 0).y

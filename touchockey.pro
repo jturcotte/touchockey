@@ -15,11 +15,16 @@ SOURCES += \
     main.cpp \
     gameserver.cpp \
     httpserver.cpp \
-    lightedimageitem.cpp
+    lightedimageitem.cpp \
+    playerbox2dbody.cpp
 
 HEADERS += \
     gameserver.h \
     httpserver.h \
-    lightedimageitem.h
+    lightedimageitem.h \
+    playerbox2dbody.h
 
 RESOURCES += touchockey.qrc
+
+lowfi: DEFINES += LOWFI=1
+else: DEFINES += LOWFI=0

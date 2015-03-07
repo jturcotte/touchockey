@@ -29,16 +29,14 @@ Item {
     property Team rightTeam
     property url connectUrl
 
-    RectangularGlow {
+    Rectangle {
         anchors {
             fill: scorePanel
-            leftMargin: -glowRadius / 2
-            rightMargin: -glowRadius / 2
-            topMargin: -glowRadius / 2
-            bottomMargin: -glowRadius / 2
+            leftMargin: -10
+            rightMargin: -10
+            topMargin: -10
+            bottomMargin: -10
         }
-        glowRadius: 25
-        opacity: 0.75
         color: "black"
     }
     GridLayout {
@@ -50,16 +48,16 @@ Item {
         Text {
             id: leftTeamScore
             text: "Red: "
-            color: leftTeam.teamColor
-            font { pixelSize: scorePanel.textSize; bold: true; family: "Arial" }
+            color: Qt.lighter(leftTeam.teamColor)
+            font { pixelSize: scorePanel.textSize; bold: true; family: "DejaVu Sans" }
             style: Text.Sunken; styleColor: Qt.lighter(color)
             verticalAlignment: Text.AlignVCenter
             Layout.fillHeight: true
         }
         Text {
             text: leftTeam.score
-            color: leftTeam.teamColor
-            font { pixelSize: scorePanel.textSize; bold: true; family: "Arial" }
+            color: Qt.lighter(leftTeam.teamColor)
+            font { pixelSize: scorePanel.textSize; bold: true; family: "DejaVu Sans" }
             style: Text.Sunken; styleColor: Qt.lighter(color)
             horizontalAlignment: Text.AlignRight
             verticalAlignment: Text.AlignVCenter
@@ -67,16 +65,16 @@ Item {
         }
         Text {
             text: "Blue: "
-            color: rightTeam.teamColor
-            font { pixelSize: scorePanel.textSize; bold: true; family: "Arial" }
+            color: Qt.lighter(rightTeam.teamColor)
+            font { pixelSize: scorePanel.textSize; bold: true; family: "DejaVu Sans" }
             style: Text.Sunken; styleColor: Qt.lighter(color)
             verticalAlignment: Text.AlignVCenter
             Layout.fillHeight: true
         }
         Text {
             text: rightTeam.score
-            color: rightTeam.teamColor
-            font { pixelSize: scorePanel.textSize; bold: true; family: "Arial" }
+            color: Qt.lighter(rightTeam.teamColor)
+            font { pixelSize: scorePanel.textSize; bold: true; family: "DejaVu Sans" }
             style: Text.Sunken; styleColor: Qt.lighter(color)
             horizontalAlignment: Text.AlRight
             verticalAlignment: Text.AlignVCenter
@@ -88,6 +86,7 @@ Item {
         color: "white"
         font.pointSize: 24
         font.bold: true
+        font.family: "DejaVu Sans"
         fontSizeMode: Text.HorizontalFit
         anchors.left: parent.left
         anchors.right: parent.right
@@ -108,8 +107,8 @@ Item {
         id: connectUrlText
         text: connectUrl
         color: "white"
-        font.pointSize: 24
-        font.bold: true
+        font.pixelSize: 24
+        font.family: "DejaVu Sans"
         fontSizeMode: Text.HorizontalFit
         anchors.left: parent.left
         anchors.right: parent.right

@@ -47,23 +47,23 @@ LightedImage {
         fontSizeMode: Text.Fit
         font.pointSize: 72
         font.weight: Font.Bold
-        font.family: "Arial"
+        font.family: "DejaVu Sans"
         text: model ? model.name.slice(0, 2) : ""
     }
     Emitter {
         id: fireEmitter
         property real lightIntensity: 0
         system: flamePainter.system
-        width: 25
-        height: 25
+        width: root.width / 4
+        height: width
         enabled: false
 
         lifeSpan: 160
 
         velocity: PointDirection { xVariation: width * 2; yVariation: height * 2 }
 
-        size: 24
-        sizeVariation: size
+        size: root.width
+        sizeVariation: size / 4
         Component.onCompleted: {
             // Add the item itself just to get a sync when it moves
             var jsArray = [fireEmitter, root]
@@ -83,7 +83,7 @@ LightedImage {
     }
 
     transformOrigin: Item.TopLeft
-    property QtObject body: Body {
+    property QtObject body: PlayerBox2DBody {
         target: root
         world: boxWorld
 
@@ -98,23 +98,7 @@ LightedImage {
             friction: 0.4
             restitution: 1
         }
-    }
-    Connections {
-        target: model
-        onTouchMove: {
-            function velocityDifferenceVector(toProj, onto) {
-                // Find what part of the push to removed in account for the current velocity
-                // of the body (like when you can't get any faster on a bicycle unless you
-                // start pedaling faster than what the current speed is rotating the traction
-                // wheel).
-                // There is surely a better formula than this, but here take the projection
-                // of the input movement onto the current velocity vector, and remove that part,
-                // clamping what we remove between 0 and the length of the velocity vector.
-                var unitOnto = onto.normalized()
-                var projLength = toProj.dotProduct(unitOnto)
-                var effectiveProjLength = Math.max(0, Math.min(projLength, onto.length()))
-                return unitOnto.times(effectiveProjLength)
-            }
+        onThrust: {
             function rotate(vec, deg)
             {
                 var rad = deg * Math.PI / 180
@@ -122,40 +106,19 @@ LightedImage {
                 var y = vec.x * Math.sin(rad) + vec.y * Math.cos(rad)
                 return Qt.vector2d(x, y)
             }
-            if (!boxWorld.running)
-                return
-
-            // Moving the finger 75px per second will be linearly reduced by a speed of 1m per second.
-            var inputPixelPerMeter = 75
-            // How much fraction of a second it takes to reach the mps described by the finger.
-            // 1/8th of a second will be needed for the ball to reach the finger mps speed
-            // (given that we only accelerate using the velocity difference between the controller
-            // and the player body).
-            var accelFactor = body.getMass() * 8
-
-            var moveTime = time ? time : 16
-            var bodyVelMPS = body.linearVelocity
-            var moveVecMPS = Qt.vector2d(x, y).times(1000 / moveTime / inputPixelPerMeter)
-            var velVecMPS = Qt.vector2d(bodyVelMPS.x, bodyVelMPS.y)
-            var inputAdjustmentVec = velocityDifferenceVector(moveVecMPS, velVecMPS)
-            var adjustedMove = moveVecMPS.minus(inputAdjustmentVec)
-
-            var appliedForce = adjustedMove.times(accelFactor)
-            body.applyForceToCenter(Qt.point(appliedForce.x, appliedForce.y))
-
-            var v = Qt.vector2d(x, y)
-            var fireVel = v.normalized().times(-200)
+            var fireVel = direction.times(-25)
+            var numParticles = Math.max(1, Math.min(3, strength / 20))
             fireEmitter.velocity.x = fireVel.x
             fireEmitter.velocity.y = fireVel.y
-            fireEmitter.burst(v.length())
-            fireEmitter.lightIntensity += v.length() * 0.05
+            fireEmitter.burst(numParticles)
+            fireEmitter.lightIntensity += strength * 0.05
             if (fireEmitter.lightIntensity > 2)
                 fireEmitter.lightIntensity = 2
 
             // Move the emitter to the edge of the body
             var p = fireEmitter.parent
             var center = Qt.vector2d(p.width / 2, p.height / 2)
-            var vecFromCenter = rotate(v.normalized().times(p.width / 2 - fireEmitter.width), -root.rotation)
+            var vecFromCenter = rotate(direction.times(p.width / 2), -root.rotation)
             var pos = center.minus(vecFromCenter).minus(Qt.vector2d(fireEmitter.width / 2, fireEmitter.height / 2))
             fireEmitter.x = pos.x
             fireEmitter.y = pos.y
@@ -180,4 +143,6 @@ LightedImage {
         repeat: true
         onTriggered: if (fireEmitter.lightIntensity > 0.01) fireEmitter.lightIntensity *= 0.5; else fireEmitter.lightIntensity = 0
     }
+    // Handle touch move signals in C++, and get a thrust vector back.
+    Component.onCompleted: model.touchMove.connect(body.handleTouchMove)
 }

@@ -36,9 +36,12 @@ Rectangle {
     Text {
         id: scoreText
         y: parent.height / 2 - height / 2
+        width: parent.width * 0.75
         color: "white"
         font.pointSize: 128
-        font.family: "Arial Black"
+        font.bold: true
+        font.family: "DejaVu Sans"
+        fontSizeMode: Text.HorizontalFit
     }
     Timer {
         id: scoreIntermissionTimer
