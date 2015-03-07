@@ -70,6 +70,11 @@ Window {
     height: 1080
     flags: Qt.platform.os == "osx"  ? (Qt.Window | Qt.WindowFullscreenButtonHint) : Qt.Window
 
+    Item {
+        focus: true
+        Keys.onPressed: if (event.key == Qt.Key_Escape) Qt.quit()
+    }
+
     Team {
         id: leftTeam
         property color teamColor: Qt.darker("red", 2)
