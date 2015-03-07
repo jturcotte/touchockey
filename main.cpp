@@ -53,7 +53,8 @@ public:
             image = image.scaled(requestedSize);
         if (size)
             *size = image.size();
-        return image;
+        // Make sure that it keeps its opaque flag
+        return image.convertToFormat(QImage::Format_RGB32);
     }
 
 private:
