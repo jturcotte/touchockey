@@ -123,19 +123,6 @@ LightedImage {
             fireEmitter.x = pos.x
             fireEmitter.y = pos.y
         }
-        onTouchStart: { thrusterLowSound.play(); thrusterHighSound.play() }
-    }
-    SoundEffect {
-        id: thrusterLowSound
-        muted: !thrusterHighSound.muted || fireEmitter.lightIntensity < 0.1
-        loops: SoundEffect.Infinite
-        source: "qrc:/sounds/thruster_low.wav"
-    }
-    SoundEffect {
-        id: thrusterHighSound
-        muted: fireEmitter.lightIntensity < 0.8
-        loops: SoundEffect.Infinite
-        source: "qrc:/sounds/thruster_high.wav"
     }
     Timer {
         interval: 16
