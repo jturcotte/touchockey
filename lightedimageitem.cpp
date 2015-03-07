@@ -101,6 +101,7 @@ static std::shared_ptr<QSGTexture> createAndCacheTexture(QQuickWindow *window, c
         else
             stringPath = path.toString();
         texture.reset(window->createTextureFromImage(QImage{stringPath}));
+        texture->setMipmapFiltering(QSGTexture::Linear);
         texture->setHorizontalWrapMode(QSGTexture::Repeat);
         texture->setVerticalWrapMode(QSGTexture::Repeat);
         cachedTexture = texture;
