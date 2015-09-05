@@ -24,7 +24,6 @@ import main 1.0
 import QtQuick 2.2
 import QtQuick.Window 2.2
 import QtQuick.Particles 2.0
-import QtGraphicalEffects 1.0
 import QtMultimedia 5.0
 import Box2DStatic 2.0
 
@@ -250,12 +249,15 @@ Window {
         color: rightTeam.teamColor
         rotation: 180
     }
-    RinkShadow {
-        visible: !lowfi
+    ShadowStrip {
         anchors.fill: rink
-        glowRadius: 25
-        goalTop: leftGoal.y && mapFromItem(leftGoal, 0, 0).y
-        goalBottom: leftGoal.y && leftGoal.height && mapFromItem(leftGoal, 0, leftGoal.height).y
+        points: rightGoal.x && leftGoal.x && [Qt.point(0, 0), Qt.point(width, 0)
+            , mapFromItem(rightGoal, 0, 0), mapFromItem(rightGoal, rightGoal.width, 0)
+            , mapFromItem(rightGoal, rightGoal.width, rightGoal.height), mapFromItem(rightGoal, 0, rightGoal.height)
+            , Qt.point(width, height), Qt.point(0, height)
+            , mapFromItem(leftGoal, leftGoal.width, leftGoal.height), mapFromItem(leftGoal, 0, leftGoal.height)
+            , mapFromItem(leftGoal, 0, 0), mapFromItem(leftGoal, leftGoal.width, 0)
+            ]
         color: "#a0000000"
     }
 

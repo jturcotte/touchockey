@@ -22,7 +22,8 @@ HEADERS += \
     gameserver.h \
     httpserver.h \
     lightedimageitem.h \
-    playerbox2dbody.h
+    playerbox2dbody.h \
+    shadowstrip.h
 
 RESOURCES += touchockey.qrc
 

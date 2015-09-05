@@ -15,7 +15,6 @@
     <file>qml/Corner.qml</file>
     <file>qml/LeftPanel.qml</file>
     <file>qml/PlayerBody.qml</file>
-    <file>qml/RinkShadow.qml</file>
     <file>qml/ScoreDialog.qml</file>
     <file>qml/Team.qml</file>
     <file>qml/Wall.qml</file>
@@ -25,6 +24,5 @@
     <file>sounds/hit_high.wav</file>
     <file>sounds/hit_low.wav</file>
     <file>sounds/hit_medium.wav</file>
-    <file>sounds/sfx.bfxrlibrary</file>
 </qresource>
 </RCC>

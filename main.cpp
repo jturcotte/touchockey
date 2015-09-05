@@ -28,6 +28,7 @@
 #include "lightedimageitem.h"
 #include "playerbox2dbody.h"
 #include "qscreensaver.h"
+#include "shadowstrip.h"
 
 #include "qqrencode.h"
 #include <QImage>
@@ -72,6 +73,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<LightedImageItem>("main", 1, 0, "LightedImage");
     qmlRegisterType<LightGroup>("main", 1, 0, "LightGroup");
     qmlRegisterType<PlayerBox2DBody>("main", 1, 0, "PlayerBox2DBody");
+    qmlRegisterType<ShadowStrip>("main", 1, 0, "ShadowStrip");
 
     QUrl url{QStringLiteral("http://localhost:1234")};
     for (const QHostAddress &address : QNetworkInterface::allAddresses())
