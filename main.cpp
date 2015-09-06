@@ -35,6 +35,10 @@
 #include <QNetworkInterface>
 #include <QQuickImageProvider>
 
+#ifndef LOWFI
+#define LOWFI 0
+#endif
+
 class ImageProvider : public QQuickImageProvider
 {
 public:

@@ -34,10 +34,10 @@ git submodule update --init
 qmake && make
 ```
 
-To build for the Raspberry Pi:
+To build for lower end devices:
 ```
 git submodule update --init
-qmake CONFIG+=rpi && make
+qmake DEFINES+=LOWFI=1 && make
 ```
 
 Known issues
