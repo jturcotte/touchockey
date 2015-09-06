@@ -51,6 +51,7 @@ public:
         QImage image;
         if (id == QLatin1String("connectQr")) {
             QQREncode encoder;
+            encoder.setMargin(1);
             encoder.encode(m_url.toString());
             image = encoder.toQImage();
         }
