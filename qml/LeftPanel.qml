@@ -58,7 +58,6 @@ Item {
             color: Qt.lighter(leftTeam.teamColor)
             font { pixelSize: scorePanel.textSize; bold: true; family: "DejaVu Sans" }
             style: Text.Sunken; styleColor: Qt.lighter(color)
-            horizontalAlignment: Text.AlignRight
             verticalAlignment: Text.AlignVCenter
             Layout.fillHeight: true
         }
@@ -75,7 +74,6 @@ Item {
             color: Qt.lighter(rightTeam.teamColor)
             font { pixelSize: scorePanel.textSize; bold: true; family: "DejaVu Sans" }
             style: Text.Sunken; styleColor: Qt.lighter(color, 1.2)
-            horizontalAlignment: Text.AlRight
             verticalAlignment: Text.AlignVCenter
             Layout.fillHeight: true
         }
