@@ -1,0 +1,17 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+<qresource prefix="/">
+    <file>images/border.png</file>
+    <file>images/ft_broken01_c.png</file>
+    <file>images/ft_broken01_n.png</file>
+    <file>images/globe.svg</file>
+    <file>images/saucer_blue.png</file>
+    <file>images/saucer_normals.png</file>
+    <file>images/saucer_red.png</file>
+    <file>sounds/goal.wav</file>
+    <file>sounds/hit_ball.wav</file>
+    <file>sounds/hit_high.wav</file>
+    <file>sounds/hit_low.wav</file>
+    <file>sounds/hit_medium.wav</file>
+</qresource>
+</RCC>

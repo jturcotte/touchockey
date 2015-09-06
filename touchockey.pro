@@ -25,5 +25,4 @@ HEADERS += \
     playerbox2dbody.h \
     shadowstrip.h
 
-RESOURCES += touchockey.qrc
-
+RESOURCES += touchockey.qrc resources.qrc

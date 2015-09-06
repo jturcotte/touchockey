@@ -5,13 +5,6 @@
     <file>client/controller.html</file>
     <file>client/index.html</file>
     <file>client/tap.js</file>
-    <file>images/border.png</file>
-    <file>images/ft_broken01_c.png</file>
-    <file>images/ft_broken01_n.png</file>
-    <file>images/globe.svg</file>
-    <file>images/saucer_blue.png</file>
-    <file>images/saucer_normals.png</file>
-    <file>images/saucer_red.png</file>
     <file>qml/Corner.qml</file>
     <file>qml/LeftPanel.qml</file>
     <file>qml/PlayerBody.qml</file>
@@ -19,10 +12,5 @@
     <file>qml/Team.qml</file>
     <file>qml/Wall.qml</file>
     <file>qml/main.qml</file>
-    <file>sounds/goal.wav</file>
-    <file>sounds/hit_ball.wav</file>
-    <file>sounds/hit_high.wav</file>
-    <file>sounds/hit_low.wav</file>
-    <file>sounds/hit_medium.wav</file>
 </qresource>
 </RCC>
