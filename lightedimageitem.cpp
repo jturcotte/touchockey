@@ -117,15 +117,15 @@ public:
     const char *vertexShader() const {
         return QT_STRINGIFY(
             const int numberOfLights = 5;
-            attribute highp vec4 vertex;
-            attribute highp vec2 tex;
-            attribute highp vec3 tangent;
-            attribute highp vec3 vertWorldPos;
-            uniform highp vec2 lightWorldPos[numberOfLights];
-            uniform highp float lightIntensities[numberOfLights];
-            uniform highp mat4 qt_Matrix;
-            varying highp vec2 qt_TexCoord0;
-            varying highp vec3 lightVecTangent[numberOfLights];
+            attribute mediump vec4 vertex;
+            attribute mediump vec2 tex;
+            attribute mediump vec3 tangent;
+            attribute mediump vec3 vertWorldPos;
+            uniform mediump vec2 lightWorldPos[numberOfLights];
+            uniform mediump float lightIntensities[numberOfLights];
+            uniform mediump mat4 qt_Matrix;
+            varying mediump vec2 qt_TexCoord0;
+            varying mediump vec3 lightVecTangent[numberOfLights];
 
             void main() {
                 qt_TexCoord0 = tex;
@@ -134,13 +134,13 @@ public:
                 // The normal is always (0,0,1) and we can calculate the bitangent,
                 // so we only need the tangent to calculate a matrix to get the light
                 // vectors into tangent space.
-                vec3 normal = vec3(0.0, 0.0, 1.0);
-                vec3 bitangent = cross(normal, tangent);
-                mat3 toTanMat = mat3(tangent , bitangent , normal);
+                lowp vec3 normal = vec3(0.0, 0.0, 1.0);
+                mediump vec3 bitangent = cross(normal, tangent);
+                mediump mat3 toTanMat = mat3(tangent , bitangent , normal);
 
                 for(int i = 0; i < numberOfLights; i++) {
                     // Get the light vector
-                    vec3 lightVec = vec3(lightWorldPos[i], 50.0 * lightIntensities[i]) - vertWorldPos;
+                    mediump vec3 lightVec = vec3(lightWorldPos[i], 50.0 * lightIntensities[i]) - vertWorldPos;
                     // Rotate the vector into tangent space
                     lightVecTangent[i] = toTanMat * lightVec;
                 }
@@ -151,22 +151,22 @@ public:
     const char *fragmentShader() const {
         return QT_STRINGIFY(
             const int numberOfLights = 5;
-            varying highp vec2 qt_TexCoord0;
-            varying highp vec3 lightVecTangent[numberOfLights];
-            uniform highp float qt_Opacity;
-            uniform highp float lightIntensities[numberOfLights];
+            varying mediump vec2 qt_TexCoord0;
+            varying mediump vec3 lightVecTangent[numberOfLights];
+            uniform mediump float qt_Opacity;
+            uniform mediump float lightIntensities[numberOfLights];
             uniform sampler2D sourceImage;
             uniform sampler2D normalsImage;
 
             void main(void) {
-                highp vec2 pixPos = qt_TexCoord0;
-                highp vec4 pix = texture2D(sourceImage, pixPos.st);
-                highp vec4 pix2 = texture2D(normalsImage, pixPos.st);
-                highp vec3 normal = vec3(pix2.rg * 2.0 - 1.0, pix2.b);
-                highp float diffuse = 0.66;
+                mediump vec2 pixPos = qt_TexCoord0;
+                mediump vec4 pix = texture2D(sourceImage, pixPos.st);
+                mediump vec4 pix2 = texture2D(normalsImage, pixPos.st);
+                mediump vec3 normal = vec3(pix2.rg * 2.0 - 1.0, pix2.b);
+                mediump float diffuse = 0.66;
 
                 // Unroll the loop, my HD3000 doesn't like non-const array lookups.
-                highp vec3 relVec;
+                mediump vec3 relVec;
                 relVec = normalize(lightVecTangent[0]);
                 diffuse += lightIntensities[0] * 0.4 * dot(normal, relVec);
                 relVec = normalize(lightVecTangent[1]);
@@ -180,7 +180,7 @@ public:
 
                 diffuse = clamp(diffuse, 0.0, 1.0);
 
-                highp vec4 color = vec4(diffuse * pix.rgb, pix.a);
+                mediump vec4 color = vec4(diffuse * pix.rgb, pix.a);
                 gl_FragColor = color * qt_Opacity;
             }
         );

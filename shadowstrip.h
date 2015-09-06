@@ -35,9 +35,9 @@ public:
 
     const char *vertexShader() const {
         return QT_STRINGIFY(
-            attribute highp vec4 vertex;
-            attribute highp vec2 texCoord;
-            uniform highp mat4 qt_Matrix;
+            attribute mediump vec4 vertex;
+            attribute mediump vec2 texCoord;
+            uniform mediump mat4 qt_Matrix;
             varying mediump vec2 tex;
 
             void main() {
@@ -56,7 +56,7 @@ public:
         //     });
         return QT_STRINGIFY(
             varying mediump vec2 tex;
-            uniform highp float qt_Opacity;
+            uniform lowp float qt_Opacity;
             uniform lowp vec4 color;
 
             void main() {
