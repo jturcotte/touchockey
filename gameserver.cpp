@@ -25,7 +25,7 @@
 #include "QtWebSockets/QWebSocket"
 #include <QDir>
 #include <QFile>
-#include <QUuid>
+#include <QGuiApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMimeDatabase>
@@ -33,6 +33,7 @@
 #include <QPoint>
 #include <QStandardPaths>
 #include <QTcpSocket>
+#include <QUuid>
 
 GameServer::GameServer(quint16 port, QObject *parent)
     : QThread(parent)
@@ -102,10 +103,17 @@ GameServerImpl::GameServerImpl(GameServer *pub, quint16 port)
     if (m_httpServer->listen(QHostAddress::Any, port)) {
         qDebug() << "HTTP Server listening on port" << port;
         connect(m_httpServer.get(), &HttpServer::normalHttpRequest, this, &GameServerImpl::handleNormalHttpRequest);
+    } else {
+        qWarning("ERROR: Could not listen for HTTP connections on port %d", port);
+        qApp->quit();
     }
+
     if (m_wsServer->listen(QHostAddress::Any, 12345)) {
         qDebug() << "WebSocket Server listening on port" << 12345;
         connect(m_wsServer.get(), &QWebSocketServer::newConnection, this, &GameServerImpl::onNewConnection);
+    } else {
+        qWarning("ERROR: Could not listen for WebSockets connections on port %d", 12345);
+        qApp->quit();
     }
 }
 

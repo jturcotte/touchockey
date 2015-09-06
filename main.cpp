@@ -80,7 +80,15 @@ int main(int argc, char *argv[])
     qmlRegisterType<PlayerBox2DBody>("main", 1, 0, "PlayerBox2DBody");
     qmlRegisterType<ShadowStrip>("main", 1, 0, "ShadowStrip");
 
-    QUrl url{QStringLiteral("http://localhost:1234")};
+    uint16_t serverPort;
+    bool ok = false;
+    if (a.arguments().size() > 1)
+        serverPort = a.arguments().at(1).toInt(&ok);
+    if (!ok)
+        serverPort = 1234;
+
+    QUrl url{QStringLiteral("http://localhost")};
+    url.setPort(serverPort == 80 ? -1 : serverPort);
     for (const QHostAddress &address : QNetworkInterface::allAddresses())
         if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost)) {
             url.setHost(address.toString());
@@ -94,7 +102,7 @@ int main(int argc, char *argv[])
     engine.rootObjects().first()->setProperty("lowfi", LOWFI);
 
     // Use a blocking queued connection to make sure that we've initialized the QML Connection before emitting any message from the server thread.
-    GameServer server(1234);
+    GameServer server(serverPort);
     QObject::connect(&server, SIGNAL(playerConnected(const QVariant &)), engine.rootObjects().first(), SLOT(onPlayerConnected(const QVariant &)), Qt::BlockingQueuedConnection);
     QObject::connect(&server, SIGNAL(playerDisconnected(const QVariant &)), engine.rootObjects().first(), SLOT(onPlayerDisconnected(const QVariant &)));
 
